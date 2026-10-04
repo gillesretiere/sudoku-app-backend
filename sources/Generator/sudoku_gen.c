@@ -49,7 +49,7 @@ char row[9][9][2];
 char col[9][9][2];
 char box[9][9][2];
 char solved[9][9];
-int silent = TRUE;
+int silent = FALSE;
 
 // Variables and functions local to this module
 char puzzle[9][9];
@@ -135,8 +135,38 @@ const char KEEP4[] =
 const char *KEEPS[5] = { KEEP0, KEEP1, KEEP2, KEEP3, KEEP4 };
 #endif
 
+/**
+ * Affiche une grille de Sudoku 9x9 dans le terminal.
+ * Remplace les zéros (cases vides) par un point '.'.
+ */
+void print_grid(char grid[9][9]) {
+    printf("\n+-------+-------+-------+\n");
+    for (int i = 0; i < 9; i++) {
+        printf("| ");
+        for (int j = 0; j < 9; j++) {
+            int val = grid[i][j];
+            if (val == 0) {
+                printf(". ");
+            } else {
+                printf("%d ", val);
+            }
+            if ((j + 1) % 3 == 0) {
+                printf("| ");
+            }
+        }
+        printf("\n");
+        if ((i + 1) % 3 == 0) {
+            printf("+-------+-------+-------+\n");
+        }
+    }
+    printf("\n");
+}
+
 //======================================================================== main
 int main(int argc, char *argv[]) {
+  (void)argc; /* Indique au compilateur que argc est volontairement inutilisé */
+  (void)argv; /* Indique au compilateur que argv est volontairement inutilisé */
+
   printf("*** sudoku_gen ***\n");
   char mess[32];
   int n_seeds = N_SEEDS;
@@ -162,7 +192,9 @@ int main(int argc, char *argv[]) {
   unsigned long start_time = clock();
 
   for (int k_seed = 0; k_seed < n_seeds; k_seed++) {
-    int seed = FIRST_SEED + k_seed;
+    // int seed = FIRST_SEED + k_seed;
+    /* Initialisation de la graine avec l'heure exacte du système (en secondes) */
+    unsigned int seed = (unsigned int)time(NULL) + k_seed;
     srand(seed);
     int brute_result;
     int n;
@@ -291,6 +323,11 @@ skip:                                                                    // <==
           (brute_result == BRUTE_COMP_DIFFERENT) ? "No" : "Yes"
           );
       } while (brute_result == BRUTE_COMP_DIFFERENT);
+
+      /* --- DEBUT DE L'AJOUT --- */
+    printf("\nGrille de Sudoku générée avec succès :");
+    print_grid(puzzle);
+    /* --- FIN DE L'AJOUT --- */
 
     // Save puzzle and solution into strings
     int kar = 0;
