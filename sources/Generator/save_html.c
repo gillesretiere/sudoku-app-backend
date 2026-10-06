@@ -14,7 +14,7 @@
 
 #define SUDOKU_TYPE PLAIN_SUDOKU
 
-void save_html(char *puzzle, int seed, char *suffix) {
+void save_html(char *puzzle, char *solution_string, char *suffix) {
   char *header_1 =
       "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
         "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
@@ -47,15 +47,15 @@ void save_html(char *puzzle, int seed, char *suffix) {
       ;
   char *footer = "</table>\n</body>\n</html>";
 
-  char f_name[64] = {0};
-  sprintf(f_name, "%d%s.html", seed, suffix);
+  char f_name[128] = {0};
+  sprintf(f_name, "%s%s.html", solution_string, suffix);
 
   FILE *fp = fopen(f_name, "w");
   if (fp == NULL) {
     printf("Unable to open the file '%s' for writing\n", f_name);
     }
   else {
-    fprintf(fp, "%s%d%s", header_1, seed, header_2);
+    fprintf(fp, "%s%s%s", header_1, solution_string, header_2);
     for (int i = 0; i < 81; i++) {
       int kR = i / 9;
       int kC = i - kR * 9;

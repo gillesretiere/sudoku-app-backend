@@ -8,6 +8,6 @@
 #ifndef SAVE_HTML
 #define SAVE_HTML
 
-void save_html(char *puzzle, int seed, char *suffix);
+void save_html(char *puzzle, char *solution_string, char *suffix);
 
 #endif

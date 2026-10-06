@@ -2,10 +2,10 @@
 #define GENERATOR_H
 
 /**
- * Génère une grille de Sudoku unique ainsi que sa solution complète.
+ * Génère une grille de Sudoku et sa solution en réutilisant le moteur de sudoku_gen.c
  * 
- * @param puzzle_out Tableau 9x9 récepteur pour la grille de jeu (avec cases vides à 0)
- * @param solution_out Tableau 9x9 récepteur pour la solution finale
+ * @param puzzle_out Tableau 9x9 recevant la grille de départ (0 = case vide)
+ * @param solution_out Tableau 9x9 recevant la solution complète
  */
 void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9]);
 

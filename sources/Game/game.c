@@ -1,23 +1,23 @@
 #include <stdio.h>
 #include "game.h"
+#include "../Generator/generator.h"
 
 /**
- * Initialise une partie avec une grille de test temporaire.
+ * Initialise une nouvelle partie en générant une grille dynamique.
  */
 void init_game(SudokuGame *game) {
+    printf("Génération d'une nouvelle grille de Sudoku en cours...\n");
+
+    /* Appel du moteur de génération d'Apress */
+    generate_sudoku(game->initial_grid, game->solution);
+
+    /* Recopie de la grille initiale vers la grille de jeu du joueur */
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            game->initial_grid[i][j] = 0;
-            game->player_grid[i][j] = 0;
-            game->solution[i][j] = 0;
+            game->player_grid[i][j] = game->initial_grid[i][j];
         }
     }
-
-    /* Exemple simple pour tester : une case de départ fixe en (0,0) */
-    game->initial_grid[0][0] = 5;
-    game->player_grid[0][0] = 5;
 }
-
 /**
  * Affiche la grille dans le terminal avec les coordonnées (lignes et colonnes).
  */

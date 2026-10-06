@@ -20,6 +20,7 @@
 #include "list_solved.h"
 #include "multi_html.h"
 #include "save_html.h"
+#include "generator.h"
 
 #define LOG_TO_FILE___NO
 #define FILE_NAME "puzzles.txt"
@@ -162,6 +163,7 @@ void print_grid(char grid[9][9]) {
     printf("\n");
 }
 
+#ifndef GAME_MODE
 //======================================================================== main
 int main(int argc, char *argv[]) {
   (void)argc; /* Indique au compilateur que argc est volontairement inutilisé */
@@ -351,11 +353,11 @@ skip:                                                                    // <==
 #endif
 
 #ifdef SAVE_HTML_PUZZLE
-    save_html(puzzle_string, seed, "p");
+    save_html(puzzle_string, puzzle_string, "p");
 #endif
 
 #ifdef SAVE_HTML_SOLUTION
-    save_html(solution_string, seed, "s");
+    save_html(solution_string, solution_string, "s");
 #endif
     if (fp != NULL) {
       printf("#%d\n", k_seed);
@@ -378,7 +380,8 @@ skip:                                                                    // <==
   if (fp != NULL) fclose(fp);
   return EXIT_SUCCESS;
   }
-
+//======================================================================== end of main
+#endif
 //================================================================ remove_quads
 #define N_QUADS 20
 int remove_quads(int kPuz) {
@@ -784,3 +787,69 @@ int check_uniqueness() {
     } // while (incr..
   return brute_result;
   } // check_uniqueness
+
+
+/**
+ * Génère une grille de Sudoku, sa solution et enregistre les fichiers HTML correspondants.
+ */
+void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9]) {
+    silent = TRUE; /* Masque les affichages du générateur */
+    
+    /* Génération de la graine basée sur le temps courant */
+    unsigned int seed = (unsigned int)time(NULL);
+    srand(seed);
+
+    int brute_result;
+    do {
+        do { init(); } while (fill());
+
+        for (int k = 0; k < 9; k++) {
+            for (int j = 0; j < 9; j++) {
+                solved[k][j] = grid[k][j];
+                puzzle[k][j] = grid[k][j];
+            }
+        }
+
+        if (N_SET_QUADS > 0) remove_quads(0);
+        if (N_SET_PAIRS > 0) remove_pairs(0);
+        make_clue_list();
+        k_cell = 0;
+        if (N_SET_CELLS > 0) remove_clues(0);
+        if (ADDITIONAL_CELLS && k_cell < 81) remove_more_clues(0);
+
+        brute_result = check_uniqueness();
+    } while (brute_result == BRUTE_COMP_DIFFERENT);
+
+    /* 1. Copie des grilles générées vers les paramètres de sortie pour game.c */
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            puzzle_out[i][j] = puzzle[i][j];
+            solution_out[i][j] = solved[i][j];
+        }
+    }
+
+    /* 2. Conversion des grilles 9x9 en chaînes de 81 caractères */
+    char puzzle_string[82];
+    char solution_string[82];
+    int kar = 0;
+
+    for (int k = 0; k < 9; k++) {
+        for (int j = 0; j < 9; j++) {
+            /* Addition de '0' pour convertir un entier 0-9 en son caractère ASCII correspond */
+            puzzle_string[kar] = puzzle[k][j] + '0';
+            solution_string[kar] = solved[k][j] + '0';
+            kar++;
+        }
+    }
+    puzzle_string[kar] = '\0';
+    solution_string[kar] = '\0';
+
+    /* 3. Export au format HTML */
+#ifdef SAVE_HTML_PUZZLE
+    save_html(puzzle_string, puzzle_string, "p");
+#endif
+
+#ifdef SAVE_HTML_SOLUTION
+    save_html(solution_string, solution_string, "s");
+#endif
+}
