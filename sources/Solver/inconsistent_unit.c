@@ -9,6 +9,8 @@
 #include "inconsistent_unit.h"
 
 int inconsistent_unit(char *what, int kG, char unit[9][2]) {
+  (void)what;
+  (void)kG;
   int result = FALSE;
   int i_vect[10] = {0};
   for (int k = 0; k < 9 && !result; k++) {

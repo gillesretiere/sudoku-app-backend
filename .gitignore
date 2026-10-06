@@ -1,3 +1,4 @@
 sources/Generator/out.txt
 sources/Generator/*.html
 sources/Generator/sudoku_app_generator
+sources/Solver/sudoku_app_solver
