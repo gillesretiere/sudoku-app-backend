@@ -98,6 +98,7 @@ int problem_found = FALSE;
 int silent = FALSE;
 int backtracking = FALSE;
 
+#ifndef GAME_MODE
 //==================================================================== main
 int main(int argc, char *argv[]) {
   printf("*** sudoku_solver ***\n");
@@ -234,5 +235,8 @@ int main(int argc, char *argv[]) {
 
 #endif
 
+
   return EXIT_SUCCESS;
   }
+//==================================================================== main
+#endif

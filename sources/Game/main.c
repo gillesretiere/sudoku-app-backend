@@ -1,44 +1,36 @@
 #include <stdio.h>
-#include <stdbool.h>
+#include <stdlib.h>
 #include "game.h"
+#include "../Solver/solver_bridge.h"
 
 int main(void) {
     SudokuGame game;
     init_game(&game);
 
-    printf("=================================\n");
-    printf("   SUDOKU APP - BOUCLE DE JEU    \n");
-    printf("=================================\n");
+    char input[32];
+    int row, col, val;
 
-    bool running = true;
-    while (running) {
+    while (!check_victory(&game)) {
         print_game_board(&game);
+        printf("Saisir (Ligne Colonne Valeur) ou 'h' pour un Indice : ");
 
-        int row = 0, col = 0, val = 0;
-        printf("Entrez votre coup (Ligne [1-9] Colonne [1-9] Valeur [0-9]), ou 0 0 0 pour quitter : ");
-        
-        if (scanf("%d %d %d", &row, &col, &val) != 3) {
-            printf("⚠️ Saisie invalide. Veuillez entrer 3 chiffres.\n");
-            while (getchar() != '\n'); /* Nettoie le tampon de saisie */
+        if (fgets(input, sizeof(input), stdin) == NULL) continue;
+
+        /* Détection de la demande d'indice */
+        if (input[0] == 'h' || input[0] == 'H') {
+            provide_hint(&game);
             continue;
         }
 
-        /* Option pour quitter la partie */
-        if (row == 0 && col == 0 && val == 0) {
-            printf("Partie interrompue.\n");
-            running = false;
-            break;
-        }
-
-        /* Conversion des indices (l'utilisateur entre 1-9, le C utilise 0-8) */
-        if (make_move(&game, row - 1, col - 1, val)) {
-            if (check_victory(&game)) {
-                print_game_board(&game);
-                printf(" Bravo ! La grille est complétée !\n");
-                running = false;
-            }
+        /* Lecture des 3 entiers pour un coup classique */
+        if (sscanf(input, "%d %d %d", &row, &col, &val) == 3) {
+            /* Conversion des coordonnées (1-9 vers 0-8) */
+            make_move(&game, row - 1, col - 1, val);
+        } else {
+            printf("⚠️ Saisie invalide ! Exemple : '3 4 5' ou 'h'.\n");
         }
     }
 
-    return 0;
+    printf("🎉 Félicitations ! Vous avez terminé la grille !\n");
+    return EXIT_SUCCESS;
 }
