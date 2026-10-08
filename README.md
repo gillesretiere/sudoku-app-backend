@@ -13,3 +13,9 @@ Release v1.0 corresponds to the code in the published book, without corrections 
 ## Contributions
 
 See the file Contributing.md for more information on how you can contribute to this repository.
+
+## Adaptation
+### Compilation des sources
+#### Game
+gcc -Wall -Wextra -std=c11 -DGAME_MODE game.c main.c find_naked_single.c find_hidden_single.c ../Generator/*.c -I../Generator -o sudoku_game
+
