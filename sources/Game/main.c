@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "game.h"
-#include "../Solver/solver_bridge.h"
+
 
 int main(void) {
     SudokuGame game;
@@ -14,8 +14,14 @@ int main(void) {
         print_game_board(&game);
         printf("Saisir (Ligne Colonne Valeur) ou 'h' pour un Indice : ");
 
-        if (fgets(input, sizeof(input), stdin) == NULL) continue;
+                
+        /* Option pour quitter la partie */
+        if (input[0] == 'q' || input[0] == 'Q') {
+            printf("Partie interrompue.\n");
+            break;
+        }
 
+        if (fgets(input, sizeof(input), stdin) == NULL) continue;
         /* Détection de la demande d'indice */
         if (input[0] == 'h' || input[0] == 'H') {
             provide_hint(&game);
@@ -29,6 +35,7 @@ int main(void) {
         } else {
             printf("⚠️ Saisie invalide ! Exemple : '3 4 5' ou 'h'.\n");
         }
+
     }
 
     printf("🎉 Félicitations ! Vous avez terminé la grille !\n");

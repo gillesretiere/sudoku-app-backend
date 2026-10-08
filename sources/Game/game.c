@@ -1,6 +1,43 @@
 #include <stdio.h>
 #include "game.h"
 #include "../Generator/generator.h"
+#include "find_naked_single.h"
+#include "find_hidden_single.h"
+
+// 1. Définition du type pointeur de fonction pour une stratégie
+typedef bool (*StrategyFn)(const SudokuGame *);
+
+// 2. Structure regroupant les données d'un niveau de difficulté
+typedef struct {
+    const char *level_name;
+    StrategyFn *strategies;
+    const char **strategy_names;
+    int count;
+} StrategyLevel;
+
+// --- Niveau 0 : Stratégies triviales ---
+static StrategyFn strat0[] = {
+    find_naked_single,
+    find_hidden_single
+};
+
+static const char *strat0_names[] = {
+    "Candidat Unique (Naked Single)",
+    "Chiffre Caché (Hidden Single)"
+};
+
+// --- Tableau général des niveaux ---
+static StrategyLevel levels[] = {
+    {
+        .level_name = "Niveau 0 (Trivial)",
+        .strategies = strat0,
+        .strategy_names = strat0_names,
+        .count = sizeof(strat0) / sizeof(strat0[0])
+    }
+    /* Les futurs niveaux (Niveau 1, Niveau 2...) s'ajouteront ici simplement */
+};
+
+static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
 /**
  * Initialise une nouvelle partie en générant une grille dynamique.
@@ -123,4 +160,28 @@ bool check_victory(const SudokuGame *game) {
         }
     }
     return true;
+}
+
+// Function principale d'indice
+void provide_hint(const SudokuGame *game) {
+    printf("\n--- RECHERCHE D'UN INDICE ---\n");
+
+    // Parcours de chaque niveau de difficulté
+    for (int l = 0; l < N_LEVELS; l++) {
+        StrategyLevel *lvl = &levels[l];
+
+        // Parcours des stratégies au sein du niveau courant
+        for (int i = 0; i < lvl->count; i++) {
+            // Appel dynamique de la stratégie via son pointeur de fonction
+            if (lvl->strategies[i](game)) {
+                printf("[Difficulté : %s | Stratégie : %s]\n", 
+                       lvl->level_name, lvl->strategy_names[i]);
+                printf("-------------------------------\n\n");
+                return; // Indice trouvé, on sort immédiatement
+            }
+        }
+    }
+
+    printf("Aucun indice trouvé avec les stratégies actuelles.\n");
+    printf("-------------------------------\n\n");
 }
