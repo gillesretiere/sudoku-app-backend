@@ -39,21 +39,117 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
+// Grille de test : Bloquée pour Naked Single, déblocable par Hidden Single (ligne/colonne)
+/*
+static const int TEST_GRID_HIDDEN_SINGLE[9][9] = {
+    {0, 0, 0,  0, 0, 0,  0, 0, 0},
+    {0, 0, 0,  0, 0, 3,  0, 8, 5},
+    {0, 0, 1,  0, 2, 0,  0, 0, 0},
+
+    {0, 0, 0,  5, 0, 7,  0, 0, 0},
+    {0, 0, 4,  0, 0, 0,  1, 0, 0},
+    {0, 9, 0,  0, 0, 0,  0, 0, 0},
+
+    {5, 0, 0,  0, 0, 0,  0, 7, 3},
+    {0, 0, 2,  0, 1, 0,  0, 0, 0},
+    {0, 0, 0,  0, 4, 0,  0, 0, 9}
+};
+*/
+
+// Simulation silencieuse pour vérifier si la grille nécessite plus que Naked Single
+static bool requires_hidden_single(const SudokuGame *game) {
+    SudokuGame temp_game = *game;
+    bool progress = true;
+
+    // Tente de résoudre la grille uniquement avec Naked Single sans afficher de texte
+    while (progress) {
+        progress = false;
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if (temp_game.player_grid[r][c] == 0) {
+                    int count = 0;
+                    int candidate = 0;
+
+                    for (int val = 1; val <= 9; val++) {
+                        // Vérification rapide de validité
+                        bool valid = true;
+                        for (int i = 0; i < 9; i++) {
+                            if (temp_game.player_grid[r][i] == val || temp_game.player_grid[i][c] == val) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                        if (valid) {
+                            int start_r = (r / 3) * 3;
+                            int start_c = (c / 3) * 3;
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    if (temp_game.player_grid[start_r + i][start_c + j] == val) {
+                                        valid = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (valid) {
+                            count++;
+                            candidate = val;
+                        }
+                    }
+
+                    if (count == 1) {
+                        temp_game.player_grid[r][c] = candidate;
+                        progress = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // Si la grille contient encore des cases vides, c'est que Naked Single est bloqué !
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            if (temp_game.player_grid[r][c] == 0) {
+                return true; // Requis : la grille a besoin d'une stratégie plus avancée
+            }
+        }
+    }
+
+    return false; // Trop facile : résoluble entièrement par Naked Single
+}
+
 /**
  * Initialise une nouvelle partie en générant une grille dynamique.
  */
-void init_game(SudokuGame *game) {
-    printf("Génération d'une nouvelle grille de Sudoku en cours...\n");
+void init_game(SudokuGame *game, int difficulty) {
+printf("Génération d'une grille calibrée pour le niveau %d...\n", difficulty);
 
-    /* Appel du moteur de génération d'Apress */
-    generate_sudoku(game->initial_grid, game->solution);
+    int attempts = 0;
+    bool valid_grid = false;
 
-    /* Recopie de la grille initiale vers la grille de jeu du joueur */
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 9; j++) {
-            game->player_grid[i][j] = game->initial_grid[i][j];
+    while (!valid_grid) {
+        attempts++;
+        generate_sudoku(game->initial_grid, game->solution, difficulty);
+
+        // Copie temporaire dans la grille du joueur
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                game->player_grid[i][j] = game->initial_grid[i][j];
+            }
+        }
+
+        // Pour les niveaux 2 et 3, on s'assure que Naked Single ne suffit pas
+        if (difficulty >= 2) {
+            if (requires_hidden_single(game)) {
+                valid_grid = true;
+            }
+        } else {
+            valid_grid = true; // Niveau 1 : accepte toutes les grilles
         }
     }
+
+    printf("Grille validée avec succès (%d tentative(s)).\n", attempts);
 }
 
 /**

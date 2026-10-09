@@ -57,11 +57,11 @@ char puzzle[9][9];
 int r_1[81];
 int c_1[81];
 int k_cell;
-int remove_quads(int k_puz);
-int remove_pairs(int k_puz);
+int remove_quads(int k_puz, int target_quads);
+int remove_pairs(int k_puz, int target_pairs);
 void make_clue_list(void);
 int remove_clues(int k_puz);
-void remove_more_clues(int k_puz);
+void remove_more_clues(int kPuz, int target_clues);
 int check_uniqueness(void);
 
 // The following table identifies the box of grid 0 that overlaps with other
@@ -173,6 +173,7 @@ int main(int argc, char *argv[]) {
   char mess[32];
   int n_seeds = N_SEEDS;
   int k_try = 0;
+  int target_clues = 28; /* <-- AJOUT : Valeur cible par défaut pour le mode autonome */
 
 #if DO_MULTI_GRID
   // When creating multi-grid puzzles, set n_seed to the number of
@@ -271,7 +272,7 @@ int main(int argc, char *argv[]) {
 #else
       //========= Remove N_SET_QUADS quadruples of clues
       if (N_SET_QUADS > 0) {
-        int success = remove_quads(k_seed);
+        int success = remove_quads(k_seed, N_SET_QUADS);
         if (!success) {
           brute_result = BRUTE_COMP_DIFFERENT;
           goto skip;                                                      //==>
@@ -280,7 +281,7 @@ int main(int argc, char *argv[]) {
 
       //========= Remove N_SET_PAIRS pairs of clues
       if (N_SET_PAIRS > 0) {
-        int success = remove_pairs(k_seed);
+        int success = remove_pairs(k_seed, N_SET_PAIRS);
         if (!success) {
           brute_result = BRUTE_COMP_DIFFERENT;
           goto skip;                                                      //==>
@@ -297,7 +298,7 @@ int main(int argc, char *argv[]) {
           goto skip;                                                      //==>
           }
         }
-      if (ADDITIONAL_CELLS && k_cell < 81) remove_more_clues(k_seed);
+      if (ADDITIONAL_CELLS && k_cell < 81) remove_more_clues(k_seed, target_clues);
 #endif
 
       //========= Check whether the solution is really unique
@@ -384,7 +385,7 @@ skip:                                                                    // <==
 #endif
 //================================================================ remove_quads
 #define N_QUADS 20
-int remove_quads(int kPuz) {
+int remove_quads(int kPuz, int target_quads) {
 
   // Build a random list of cells to be quadrupled
   int r_4[N_QUADS];
@@ -474,7 +475,7 @@ int remove_quads(int kPuz) {
         }
       }
     } // while (n_quads..
-  int success = n_quads == N_SET_QUADS;
+  int success = (n_quads == target_quads);
   if (!silent) {
     if (success) {
       printf("%d clues left after removing the quadruples\n", count_solved());
@@ -496,7 +497,7 @@ int remove_quads(int kPuz) {
 
 //================================================================ remove_pairs
 #define N_PAIRS 40
-int remove_pairs(int kPuz) {
+int remove_pairs(int kPuz, int target_pairs) {
 
   // Build a random list of cells to be paired
   int r_2[N_PAIRS];
@@ -580,7 +581,7 @@ int remove_pairs(int kPuz) {
       } // if (k_pair..
     } // while (n_pairs..
 
-  int success = n_pairs == N_SET_PAIRS;
+  int success = (n_pairs == target_pairs);
   if (!silent) {
     if (success) {
       printf("%d clues left after removing the pairs\n", count_solved());
@@ -697,61 +698,45 @@ int remove_clues(int kPuz) {
   } // remove_clues
 
 //=========================================================== remove_more_clues
-void remove_more_clues(int kPuz) {
-  int brute_result;
-  do {
-    int kR;
-    int kC;
-    do {
-      kR = r_1[k_cell];
-      kC = c_1[k_cell];
-      if (grid[kR][kC] == 0) {
-        if (!silent) printf("2 Cell %d: (%d,%d) overlaps with quadruple"
-            " or pair\n", k_cell, kR, kC
-            );
-        }
-      k_cell++;
-      } while (grid[kR][kC] == 0 && k_cell < 81);
+void remove_more_clues(int kPuz, int target_clues) {
+  (void)kPuz;
 
-    // The second part of the following 'if' is only needed when creating
-    // multi-grid puzzles
-    if (k_cell <= 81  &&
-        (kPuz == 0  ||  !in_box(kR, kC, overlapping_box[kPuz]))
-        ) {
-      grid[kR][kC] = 0;
-      if (!silent) printf("2 Clue removal %d, removed"
-          " cell %d: (%d,%d)\n", 81-count_solved(), k_cell-1, kR, kC
-          );
+  /* La boucle s'arrête dès que le nombre cible d'indices est atteint */
+  while (k_cell < 81 && count_solved() > target_clues) {
+    int kR = r_1[k_cell];
+    int kC = c_1[k_cell];
+    k_cell++;
 
-      // Save the Sudoku puzzle after the removal
-      for (int k = 0; k < 9; k++) {
-        for (int j = 0; j < 9; j++) {
-          puzzle[k][j] = grid[k][j];
-          }
-        }
-
-      // Solve with brute() and see whether the solution matches the reference
-      brute_result = brute_comp();
-      if (!silent) printf("2 Brute after removing cell %d: %s\n",
-          k_cell-1, brute_comp_err[brute_result]
-          );
-
-      // Restore the puzzle to how it was before solving it
-      for (int k = 0; k < 9; k++) {
-        for (int j = 0; j < 9; j++) {
-          grid[k][j] = puzzle[k][j];
-          }
-        }
-      } // if (k_cell..
-    } while (brute_result == BRUTE_COMP_OK && k_cell < 81);
-
-  // Restore the last clue removed
-  if (brute_result != BRUTE_COMP_OK) {
-    int kR = r_1[k_cell-1];
-    int kC = c_1[k_cell-1];
-    puzzle[kR][kC] = solved[kR][kC];
+    if (grid[kR][kC] == 0) {
+      continue;
     }
-  } // remove_more_clues
+
+    /* 1. Retrait temporaire de l'indice */
+    grid[kR][kC] = 0;
+    for (int k = 0; k < 9; k++) {
+      for (int j = 0; j < 9; j++) {
+        puzzle[k][j] = grid[k][j];
+      }
+    }
+
+    /* 2. Test d'unicité */
+    int brute_result = brute_comp();
+
+    /* 3. Restauration de 'grid' depuis 'puzzle' */
+    for (int k = 0; k < 9; k++) {
+      for (int j = 0; j < 9; j++) {
+        grid[k][j] = puzzle[k][j];
+      }
+    }
+
+    /* 4. Si la grille perd son unicité, on remet le chiffre */
+    if (brute_result != BRUTE_COMP_OK) {
+      grid[kR][kC] = solved[kR][kC];
+      puzzle[kR][kC] = solved[kR][kC];
+    }
+  }
+}
+//=========================================================== remove_more_clues
 
 //============================================================ check_uniqueness
 int check_uniqueness() {
@@ -792,12 +777,35 @@ int check_uniqueness() {
 /**
  * Génère une grille de Sudoku, sa solution et enregistre les fichiers HTML correspondants.
  */
-void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9]) {
+void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9], int difficulty) {
     silent = TRUE; /* Masque les affichages du générateur */
     
     /* Génération de la graine basée sur le temps courant */
     unsigned int seed = (unsigned int)time(NULL);
     srand(seed);
+
+    /* Définition du nombre de suppressions selon le niveau */
+    int target_quads = 3;
+    int target_pairs = 6;
+    int target_clues = 36;
+    // int use_more_clues = FALSE;
+
+ if (difficulty == 1) {
+        /* Facile : ~48 indices */
+        target_quads = 2;
+        target_pairs = 4;
+        target_clues = 48;
+    } else if (difficulty == 2) {
+        /* Moyen : ~36 indices */
+        target_quads = 4;
+        target_pairs = 8;
+        target_clues = 36;
+    } else {
+        /* Difficile : ~28 indices (débloque les stratégies avancées) */
+        target_quads = 5;
+        target_pairs = 10;
+        target_clues = 28;
+    }
 
     int brute_result;
     do {
@@ -810,12 +818,16 @@ void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9]) {
             }
         }
 
-        if (N_SET_QUADS > 0) remove_quads(0);
-        if (N_SET_PAIRS > 0) remove_pairs(0);
+        if (target_quads > 0) remove_quads(0, target_quads);
+        if (target_pairs > 0) remove_pairs(0, target_pairs);
+        
+        /* Suppression affinée case par case jusqu'au nombre d'indices cible */
         make_clue_list();
         k_cell = 0;
         if (N_SET_CELLS > 0) remove_clues(0);
-        if (ADDITIONAL_CELLS && k_cell < 81) remove_more_clues(0);
+        if (ADDITIONAL_CELLS && k_cell < 81) {
+            remove_more_clues(0, target_clues);
+        }
 
         brute_result = check_uniqueness();
     } while (brute_result == BRUTE_COMP_DIFFERENT);

@@ -13,7 +13,8 @@ typedef struct {
 typedef int (*f_ptr_t)(void);
 extern f_ptr_t *strat_all[];
 /* Prototypes des fonctions du jeu */
-void init_game(SudokuGame *game);
+// Initialise une nouvelle partie selon la difficulté choisie (1 à 3)
+void init_game(SudokuGame *game, int difficulty);
 void print_game_board(const SudokuGame *game);
 bool make_move(SudokuGame *game, int row, int col, int value);
 bool check_victory(const SudokuGame *game);

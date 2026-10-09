@@ -4,10 +4,31 @@
 
 
 int main(void) {
-    SudokuGame game;
-    init_game(&game);
 
+    int difficulty = 0;
     char input[32];
+    
+    /* Saisie du niveau de difficulté */
+    while (difficulty < 1 || difficulty > 3) {
+        printf("=== SÉLECTION DE LA DIFFICULTÉ ===\n");
+        printf("  1. Facile   (Grille très fournie)\n");
+        printf("  2. Moyen    (Equilibrée)\n");
+        printf("  3. Difficile (Requiert des stratégies avancées)\n");
+        printf("Votre choix (1-3) : ");
+
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            difficulty = atoi(input);
+        }
+
+        if (difficulty < 1 || difficulty > 3) {
+            printf("⚠️ Choix invalide ! Veuillez saisir 1, 2 ou 3.\n\n");
+        }
+    }
+
+    SudokuGame game;
+    init_game(&game, difficulty);
+
+  
     int row, col, val;
 
     while (!check_victory(&game)) {

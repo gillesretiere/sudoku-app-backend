@@ -6,7 +6,8 @@
  * 
  * @param puzzle_out Tableau 9x9 recevant la grille de départ (0 = case vide)
  * @param solution_out Tableau 9x9 recevant la solution complète
+ * @param difficulty Niveau de difficulté (1 = facile, 2 = moyen, 3 = difficile)
  */
-void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9]);
+void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9], int difficulty);
 
 #endif /* GENERATOR_H */
