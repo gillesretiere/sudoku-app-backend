@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "game.h"
+#include "candidates.h"
 #include "../Generator/generator.h"
 #include "find_naked_single.h"
 #include "find_hidden_single.h"
@@ -38,23 +39,6 @@ static StrategyLevel levels[] = {
 };
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
-
-// Grille de test : Bloquée pour Naked Single, déblocable par Hidden Single (ligne/colonne)
-/*
-static const int TEST_GRID_HIDDEN_SINGLE[9][9] = {
-    {0, 0, 0,  0, 0, 0,  0, 0, 0},
-    {0, 0, 0,  0, 0, 3,  0, 8, 5},
-    {0, 0, 1,  0, 2, 0,  0, 0, 0},
-
-    {0, 0, 0,  5, 0, 7,  0, 0, 0},
-    {0, 0, 4,  0, 0, 0,  1, 0, 0},
-    {0, 9, 0,  0, 0, 0,  0, 0, 0},
-
-    {5, 0, 0,  0, 0, 0,  0, 7, 3},
-    {0, 0, 2,  0, 1, 0,  0, 0, 0},
-    {0, 0, 0,  0, 4, 0,  0, 0, 9}
-};
-*/
 
 // Simulation silencieuse pour vérifier si la grille nécessite plus que Naked Single
 static bool requires_hidden_single(const SudokuGame *game) {
@@ -280,4 +264,56 @@ void provide_hint(const SudokuGame *game) {
 
     printf("Aucun indice trouvé avec les stratégies actuelles.\n");
     printf("-------------------------------\n\n");
+}
+
+// Séquences de couleurs ANSI pour le terminal
+#define COLOR_RESET "\033[0m"
+#define COLOR_GRAY  "\033[90m"
+#define COLOR_WHITE "\033[1;37m"
+
+void print_candidates_grid(const SudokuGame *game) {
+    printf("\n==== GRILLE DES CANDIDATS (PENCILMARKS) ====\n");
+
+    for (int r = 0; r < 9; r++) {
+        if (r % 3 == 0) {
+            printf("+-----------------+-----------------+-----------------+\n");
+        }
+
+        for (int sub_r = 0; sub_r < 3; sub_r++) {
+            for (int c = 0; c < 9; c++) {
+                if (c % 3 == 0) {
+                    printf("|");
+                } else {
+                    printf(" ");
+                }
+
+                int val_already_set = game->player_grid[r][c];
+
+                if (val_already_set != 0) {
+                    if (sub_r == 1) {
+                        printf("  %s%d%s  ", COLOR_WHITE, val_already_set, COLOR_RESET);
+                    } else {
+                        printf("     ");
+                    }
+                } else {
+                    for (int sub_c = 0; sub_c < 3; sub_c++) {
+                        int candidate_val = sub_r * 3 + sub_c + 1;
+
+                        // Utilisation directe du masque de bits !
+                        if (has_candidate(game, r, c, candidate_val)) {
+                            printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
+                        } else {
+                            printf("%s.%s", COLOR_GRAY, COLOR_RESET);
+                        }
+
+                        if (sub_c < 2) {
+                            printf(" ");
+                        }
+                    }
+                }
+            }
+            printf("|\n");
+        }
+    }
+    printf("+-----------------+-----------------+-----------------+\n\n");
 }

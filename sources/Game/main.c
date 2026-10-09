@@ -49,6 +49,19 @@ int main(void) {
             continue;
         }
 
+        /* Commande AutoNote : Recalcule et affiche la grille des candidats */
+        if (input[0] == 'n' || input[0] == 'N') {
+            compute_autonote(&game);
+            print_candidates_grid(&game); // Utilise désormais has_candidate()
+            continue;
+        }        
+        
+        /* Affichage des candidats */
+        if (input[0] == 'p' || input[0] == 'P') {
+            print_candidates_grid(&game);
+            continue;
+        }        
+
         /* Lecture des 3 entiers pour un coup classique */
         if (sscanf(input, "%d %d %d", &row, &col, &val) == 3) {
             /* Conversion des coordonnées (1-9 vers 0-8) */

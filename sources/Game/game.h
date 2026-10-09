@@ -2,12 +2,14 @@
 #define GAME_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /* Structure représentant l'état complet d'une partie */
 typedef struct {
     char initial_grid[9][9]; /* Grille initiale (chiffres fixes) */
     char player_grid[9][9];  /* Grille actuelle jouée par l'utilisateur */
     char solution[9][9];     /* Solution complète pour la vérification */
+    uint16_t candidates[9][9]; // Contient les masques de bits des candidats
 } SudokuGame;
 // Strategy functions
 typedef int (*f_ptr_t)(void);
@@ -20,5 +22,14 @@ bool make_move(SudokuGame *game, int row, int col, int value);
 bool check_victory(const SudokuGame *game);
 // Analyse la grille du joueur et affiche un indice logique
 void provide_hint(const SudokuGame *game);
+void print_candidates_grid(const SudokuGame *game);
 
+// Prototype de l'AutoNote
+void compute_autonote(SudokuGame *game);
+
+// Helper pour tester un candidat dans une case (renvoie true si actif)
+bool has_candidate(const SudokuGame *game, int r, int c, int val);
+
+// Compte combien de candidats sont encore possibles dans une case
+int count_candidates(const SudokuGame *game, int r, int c);
 #endif /* GAME_H */
