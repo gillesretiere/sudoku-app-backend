@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include "brute_comp.h"
@@ -25,8 +26,8 @@
 #define LOG_TO_FILE___NO
 #define FILE_NAME "puzzles.txt"
 
-#define SAVE_HTML_PUZZLE
-#define SAVE_HTML_SOLUTION
+// #define SAVE_HTML_PUZZLE
+// #define SAVE_HTML_SOLUTION
 
 #define DO_PATTERN___NO
 
@@ -697,46 +698,106 @@ int remove_clues(int kPuz) {
   return success;
   } // remove_clues
 
-//=========================================================== remove_more_clues
-void remove_more_clues(int kPuz, int target_clues) {
-  (void)kPuz;
+/* Compte le nombre de solutions d'une grille (s'arrête dès qu'il en trouve 2) */
+static int count_solutions(char g[9][9], int *count) {
+    int row = -1, col = -1;
+    bool empty_found = false;
 
-  /* La boucle s'arrête dès que le nombre cible d'indices est atteint */
-  while (k_cell < 81 && count_solved() > target_clues) {
-    int kR = r_1[k_cell];
-    int kC = c_1[k_cell];
-    k_cell++;
-
-    if (grid[kR][kC] == 0) {
-      continue;
+    /* Recherche de la première case vide */
+    for (int r = 0; r < 9 && !empty_found; r++) {
+        for (int c = 0; c < 9 && !empty_found; c++) {
+            if (g[r][c] == 0) {
+                row = r;
+                col = c;
+                empty_found = true;
+            }
+        }
     }
 
-    /* 1. Retrait temporaire de l'indice */
-    grid[kR][kC] = 0;
-    for (int k = 0; k < 9; k++) {
-      for (int j = 0; j < 9; j++) {
-        puzzle[k][j] = grid[k][j];
-      }
+    /* Aucune case vide : une solution complète valide a été trouvée */
+    if (!empty_found) {
+        (*count)++;
+        return *count;
     }
 
-    /* 2. Test d'unicité */
-    int brute_result = brute_comp();
+    /* Test des chiffres de 1 à 9 */
+    for (int val = 1; val <= 9; val++) {
+        bool valid = true;
 
-    /* 3. Restauration de 'grid' depuis 'puzzle' */
-    for (int k = 0; k < 9; k++) {
-      for (int j = 0; j < 9; j++) {
-        grid[k][j] = puzzle[k][j];
-      }
-    }
+        /* Contrôle ligne et colonne */
+        for (int i = 0; i < 9; i++) {
+            if (g[row][i] == val || g[i][col] == val) {
+                valid = false;
+                break;
+            }
+        }
 
-    /* 4. Si la grille perd son unicité, on remet le chiffre */
-    if (brute_result != BRUTE_COMP_OK) {
-      grid[kR][kC] = solved[kR][kC];
-      puzzle[kR][kC] = solved[kR][kC];
+        /* Contrôle du bloc 3x3 */
+        if (valid) {
+            int start_r = (row / 3) * 3;
+            int start_c = (col / 3) * 3;
+            for (int r = 0; r < 3 && valid; r++) {
+                for (int c = 0; c < 3 && valid; c++) {
+                    if (g[start_r + r][start_c + c] == val) {
+                        valid = false;
+                    }
+                }
+            }
+        }
+
+        if (valid) {
+            g[row][col] = (char)val;
+            count_solutions(g, count);
+            g[row][col] = 0; /* Backtracking */
+
+            /* Si 2 solutions sont trouvées, inutile de chercher plus loin */
+            if (*count >= 2) {
+                return *count;
+            }
+        }
     }
-  }
+    return *count;
 }
-//=========================================================== remove_more_clues
+
+/* Helper : vérifie si la grille possède exactement 1 unique solution */
+static bool is_unique(char g[9][9]) {
+    char temp_grid[9][9];
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            temp_grid[r][c] = g[r][c];
+        }
+    }
+    int count = 0;
+    count_solutions(temp_grid, &count);
+    return (count == 1);
+}
+
+void remove_more_clues(int kPuz, int target_clues) {
+    (void)kPuz;
+
+    while (k_cell < 81 && count_solved() > target_clues) {
+        int kR = r_1[k_cell];
+        int kC = c_1[k_cell];
+        k_cell++;
+
+        if (grid[kR][kC] == 0) {
+            continue;
+        }
+
+        /* 1. Retrait temporaire */
+        char saved_val = grid[kR][kC];
+        grid[kR][kC] = 0;
+
+        /* 2. Test d'unicité avec notre solveur rapide */
+        if (!is_unique(grid)) {
+            /* Si la grille perd son unicité, on annule le retrait */
+            grid[kR][kC] = saved_val;
+        } else {
+            /* Mise à jour du puzzle final */
+            puzzle[kR][kC] = 0;
+        }
+    }
+}
 
 //============================================================ check_uniqueness
 int check_uniqueness() {
@@ -801,36 +862,40 @@ void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9], int difficu
         target_pairs = 8;
         target_clues = 36;
     } else {
-        /* Difficile : ~28 indices (débloque les stratégies avancées) */
+        /* Difficile : ~30 indices (débloque les stratégies avancées) */
         target_quads = 5;
         target_pairs = 10;
-        target_clues = 28;
+        target_clues = 30;
     }
 
-    int brute_result;
-    do {
-        do { init(); } while (fill());
+    // Génération de la grille de départ
+    do { init(); } while (fill());
 
-        for (int k = 0; k < 9; k++) {
-            for (int j = 0; j < 9; j++) {
-                solved[k][j] = grid[k][j];
-                puzzle[k][j] = grid[k][j];
-            }
+    for (int k = 0; k < 9; k++) {
+        for (int j = 0; j < 9; j++) {
+            solved[k][j] = grid[k][j];
+            puzzle[k][j] = grid[k][j];
         }
+    }
 
-        if (target_quads > 0) remove_quads(0, target_quads);
-        if (target_pairs > 0) remove_pairs(0, target_pairs);
-        
-        /* Suppression affinée case par case jusqu'au nombre d'indices cible */
-        make_clue_list();
-        k_cell = 0;
-        if (N_SET_CELLS > 0) remove_clues(0);
-        if (ADDITIONAL_CELLS && k_cell < 81) {
-            remove_more_clues(0, target_clues);
+    // Suppressions d'indices avec contrôle d'unicité intégré
+    if (target_quads > 0) remove_quads(0, target_quads);
+    if (target_pairs > 0) remove_pairs(0, target_pairs);
+    
+    make_clue_list();
+    k_cell = 0;
+    if (N_SET_CELLS > 0) remove_clues(0);
+    if (ADDITIONAL_CELLS && k_cell < 81) {
+        remove_more_clues(0, target_clues);
+    }
+
+    // Copie vers les paramètres de sortie
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            puzzle_out[i][j] = puzzle[i][j];
+            solution_out[i][j] = solved[i][j];
         }
-
-        brute_result = check_uniqueness();
-    } while (brute_result == BRUTE_COMP_DIFFERENT);
+    }
 
     /* 1. Copie des grilles générées vers les paramètres de sortie pour game.c */
     for (int i = 0; i < 9; i++) {
