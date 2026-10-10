@@ -8,20 +8,21 @@ int main(void) {
     int difficulty = 0;
     char input[32];
     
-    /* Saisie du niveau de difficulté */
-    while (difficulty < 1 || difficulty > 3) {
+    /* Saisie du niveau de difficulté (1 à 4) */
+    while (difficulty < 1 || difficulty > 4) {
         printf("=== SÉLECTION DE LA DIFFICULTÉ ===\n");
-        printf("  1. Facile   (Grille très fournie)\n");
-        printf("  2. Moyen    (Équilibrée)\n");
-        printf("  3. Difficile (Requiert des stratégies avancées)\n");
-        printf("Votre choix (1-3) : ");
+        printf("  1. Facile    (~48 indices)\n");
+        printf("  2. Moyen     (~41 indices)\n");
+        printf("  3. Difficile (~32 indices)\n");
+        printf("  4. Expert    (~28 indices)\n");
+        printf("Votre choix (1-4) : ");
 
         if (fgets(input, sizeof(input), stdin) != NULL) {
             difficulty = atoi(input);
         }
 
-        if (difficulty < 1 || difficulty > 3) {
-            printf("⚠️ Choix invalide ! Veuillez saisir 1, 2 ou 3.\n\n");
+        if (difficulty < 1 || difficulty > 4) {
+            printf("⚠️ Choix invalide ! Veuillez saisir un chiffre entre 1 et 4.\n\n");
         }
     }
 

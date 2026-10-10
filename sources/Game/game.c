@@ -135,8 +135,9 @@ void init_game(SudokuGame *game, int difficulty) {
     printf("Génération d'une grille calibrée pour le niveau %d...\n", difficulty);
 
     int attempts = 0;
-    const int MAX_ATTEMPTS = 30; // Garde-fou anti-blocage
+    const int MAX_ATTEMPTS = 100;
     bool valid_grid = false;
+    int clue_count = 0;
 
     while (!valid_grid && attempts < MAX_ATTEMPTS) {
         attempts++;
@@ -148,18 +149,28 @@ void init_game(SudokuGame *game, int difficulty) {
             }
         }
 
-        if (difficulty == 3) {
-            // Niveau 3 : exige l'échec de tous les Singles (Naked + Hidden)
-            if (requires_pairs_strategy(game)) {
-                valid_grid = true;
+        /* Compte réel des indices présents */
+        clue_count = 0;
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if (game->initial_grid[r][c] != 0) clue_count++;
             }
-        } else {
-            valid_grid = true;
+        }
+
+        /* Contrôle selon la difficulté sélectionnée */
+        if (difficulty == 1) {
+            valid_grid = (clue_count <= 48);
+        } else if (difficulty == 2) {
+            valid_grid = (clue_count <= 42);
+        } else if (difficulty == 3) {
+            valid_grid = (clue_count <= 34 && requires_pairs_strategy(game));
+        } else if (difficulty >= 4) {
+            valid_grid = (clue_count <= 30 && requires_pairs_strategy(game));
         }
     }
 
     compute_autonote(game);
-    printf("Grille validée avec succès (%d tentative(s)).\n", attempts);
+    printf("Grille validée avec succès (%d indices restants, %d tentative(s)).\n", clue_count, attempts);
 }
 
 void print_game_board(const SudokuGame *game) {
