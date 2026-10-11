@@ -6,6 +6,9 @@
 #include "find_hidden_single.h"
 #include "find_naked_pair.h"
 #include "find_hidden_pair.h"
+#include "find_pointing_pairs.h"
+#include "find_box_line_reduction.h"
+#include "find_naked_triple.h"
 
 // Séquences de couleurs ANSI pour le terminal
 #define COLOR_RESET "\033[0m"
@@ -43,6 +46,19 @@ static const char *strat1_names[] = {
     "Paire Cachée (Hidden Pair)"
 };
 
+// --- Niveau 2 : Stratégies avancées ---
+static StrategyFn strat2[] = {
+    find_pointing_pairs,
+    find_box_line_reduction,
+    find_naked_triple
+};
+
+static const char *strat2_names[] = {
+    "Paires/Triplets Pointés (Pointing Pairs/Triples)",
+    "Réduction Bloc-Ligne (Box-Line Reduction)",
+    "Triplet Nu (Naked Triple)"
+};
+
 static StrategyLevel levels[] = {
     {
         .level_name = "Niveau 0 (Trivial)",
@@ -55,15 +71,17 @@ static StrategyLevel levels[] = {
         .strategies = strat1,
         .strategy_names = strat1_names,
         .count = sizeof(strat1) / sizeof(strat1[0])
+    },
+    {
+        .level_name = "Niveau 2 (Avancé)",
+        .strategies = strat2,
+        .strategy_names = strat2_names,
+        .count = sizeof(strat2) / sizeof(strat2[0])
     }
 };
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
-/**
- * Simule la résolution avec TOUTES les stratégies du Niveau 0 (Naked + Hidden Singles).
- * Renvoie true si la grille se bloque et nécessite au moins le Niveau 1 (Paires).
- */
 static bool requires_pairs_strategy(const SudokuGame *game) {
     SudokuGame temp = *game;
     bool progress = true;
@@ -116,7 +134,6 @@ static bool requires_pairs_strategy(const SudokuGame *game) {
         }
     }
 
-    // Si des cases restent vides, la grille nécessite obligatoirement des Paires
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (temp.player_grid[r][c] == 0) {
@@ -128,9 +145,6 @@ static bool requires_pairs_strategy(const SudokuGame *game) {
     return false;
 }
 
-/**
- * Initialise une nouvelle partie avec un garde-fou sur le nombre de tentatives.
- */
 void init_game(SudokuGame *game, int difficulty) {
     printf("Génération d'une grille calibrée pour le niveau %d...\n", difficulty);
 
@@ -149,7 +163,6 @@ void init_game(SudokuGame *game, int difficulty) {
             }
         }
 
-        /* Compte réel des indices présents */
         clue_count = 0;
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
@@ -157,7 +170,6 @@ void init_game(SudokuGame *game, int difficulty) {
             }
         }
 
-        /* Contrôle selon la difficulté sélectionnée */
         if (difficulty == 1) {
             valid_grid = (clue_count <= 48);
         } else if (difficulty == 2) {
@@ -248,7 +260,7 @@ bool make_move(SudokuGame *game, int row, int col, int value) {
     }
 
     game->player_grid[row][col] = (char)value;
-    compute_autonote(game); // Re-calcule les candidats en mémoire après chaque coup
+    compute_autonote(game);
     return true;
 }
 
