@@ -9,6 +9,7 @@
 #include "find_pointing_pairs.h"
 #include "find_box_line_reduction.h"
 #include "find_naked_triple.h"
+#include "find_x_wing.h"
 
 // Séquences de couleurs ANSI pour le terminal
 #define COLOR_RESET "\033[0m"
@@ -59,6 +60,15 @@ static const char *strat2_names[] = {
     "Triplet Nu (Naked Triple)"
 };
 
+// --- Niveau 3 : Stratégies professionnelles ---
+static StrategyFn strat3[] = {
+    find_x_wing
+};
+
+static const char *strat3_names[] = {
+    "X-Wing"
+};
+
 static StrategyLevel levels[] = {
     {
         .level_name = "Niveau 0 (Trivial)",
@@ -77,6 +87,12 @@ static StrategyLevel levels[] = {
         .strategies = strat2,
         .strategy_names = strat2_names,
         .count = sizeof(strat2) / sizeof(strat2[0])
+    },
+    {
+        .level_name = "Niveau 3 (Professionnel)",
+        .strategies = strat3,
+        .strategy_names = strat3_names,
+        .count = sizeof(strat3) / sizeof(strat3[0])
     }
 };
 

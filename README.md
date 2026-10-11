@@ -16,5 +16,8 @@ See the file Contributing.md for more information on how you can contribute to t
 
 ## Adaptation
 ### Compilation des sources
-#### Game
+#### Game 
+##### Stratégies de niveau 1
 gcc -Wall -Wextra -std=c11 -DGAME_MODE game.c main.c find_naked_single.c find_hidden_single.c candidates.c ../Generator/*.c -I. -I../Generator -o sudoku_game
+##### Stratégies de niveau 2
+gcc -Wall -Wextra -std=c11 -DGAME_MODE game.c main.c candidates.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c ../Generator/*.c -I. -I../Generator -o sudoku_game
