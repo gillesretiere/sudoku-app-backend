@@ -27,8 +27,6 @@ int main(void) {
         total_attempts++;
         SudokuGame game;
 
-        // Viser entre 22 et 35 indices restants
-        int target_clues = 22 + (rand() % 14); 
         generate_sudoku(game.initial_grid, game.solution, 4);
 
         for (int r = 0; r < 9; r++) {

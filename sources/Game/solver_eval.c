@@ -12,7 +12,35 @@ static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     return false;
 }
 
-/* --- Niveau 0 : Singles (placement direct) --- */
+/* Compte le nombre de bits actifs dans le masque de candidats */
+static int count_bits(uint16_t mask) {
+    int count = 0;
+    for (int v = 1; v <= 9; v++) {
+        if (mask & (1 << v)) count++;
+    }
+    return count;
+}
+
+/* Place un chiffre et retire ce candidat uniquement de sa ligne, colonne et bloc 3x3 */
+static void place_digit(SudokuGame *game, int r, int c, int val) {
+    game->player_grid[r][c] = (char)val;
+    game->candidates[r][c] = 0;
+
+    for (int i = 0; i < 9; i++) {
+        game->candidates[r][i] &= ~(1 << val);
+        game->candidates[i][c] &= ~(1 << val);
+    }
+
+    int start_r = (r / 3) * 3;
+    int start_c = (c / 3) * 3;
+    for (int br = 0; br < 3; br++) {
+        for (int bc = 0; bc < 3; bc++) {
+            game->candidates[start_r + br][start_c + bc] &= ~(1 << val);
+        }
+    }
+}
+
+/* --- Niveau 0 : Singles --- */
 static bool silent_singles(SudokuGame *game) {
     /* 1. Naked Single */
     for (int r = 0; r < 9; r++) {
@@ -20,8 +48,7 @@ static bool silent_singles(SudokuGame *game) {
             if (game->player_grid[r][c] == 0 && count_candidates(game, r, c) == 1) {
                 for (int v = 1; v <= 9; v++) {
                     if (has_candidate(game, r, c, v)) {
-                        game->player_grid[r][c] = (char)v;
-                        compute_autonote(game);
+                        place_digit(game, r, c, v);
                         return true;
                     }
                 }
@@ -45,8 +72,7 @@ static bool silent_singles(SudokuGame *game) {
                     }
                 }
                 if (count == 1) {
-                    game->player_grid[target_r][target_c] = (char)val;
-                    compute_autonote(game);
+                    place_digit(game, target_r, target_c, val);
                     return true;
                 }
             }
@@ -55,7 +81,7 @@ static bool silent_singles(SudokuGame *game) {
     return false;
 }
 
-/* --- Niveau 1 : Paires Nues (Élimination réelle) --- */
+/* --- Niveau 1 : Paires Nues --- */
 static bool silent_naked_pairs(SudokuGame *game) {
     bool changed = false;
     for (int unit_type = 0; unit_type < 3; unit_type++) {
@@ -72,7 +98,6 @@ static bool silent_naked_pairs(SudokuGame *game) {
 
                     if (game->player_grid[r2][c2] != 0 || count_candidates(game, r2, c2) != 2) continue;
 
-                    /* Détection de deux cases partageant les mêmes 2 candidats */
                     if (game->candidates[r1][c1] == game->candidates[r2][c2]) {
                         uint16_t mask = game->candidates[r1][c1];
                         for (int k = 0; k < 9; k++) {
@@ -95,9 +120,184 @@ static bool silent_naked_pairs(SudokuGame *game) {
     return false;
 }
 
-/* --- Niveau 3 : X-Wing (Élimination réelle) --- */
+/* --- Niveau 2 : Pointing Pairs --- */
+static bool silent_pointing_pairs(SudokuGame *game) {
+    bool changed = false;
+    for (int b = 0; b < 9; b++) {
+        int start_r = (b / 3) * 3;
+        int start_c = (b % 3) * 3;
+
+        for (int val = 1; val <= 9; val++) {
+            int same_r = -1, same_c = -1;
+            bool is_same_row = true, is_same_col = true;
+            int count = 0;
+
+            for (int r = 0; r < 3; r++) {
+                for (int c = 0; c < 3; c++) {
+                    int curr_r = start_r + r, curr_c = start_c + c;
+                    if (game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
+                        count++;
+                        if (same_r == -1) same_r = curr_r;
+                        else if (same_r != curr_r) is_same_row = false;
+
+                        if (same_c == -1) same_c = curr_c;
+                        else if (same_c != curr_c) is_same_col = false;
+                    }
+                }
+            }
+
+            if (count >= 2 && count <= 3) {
+                if (is_same_row && same_r != -1) {
+                    for (int col = 0; col < 9; col++) {
+                        if ((col / 3) != (b % 3)) {
+                            if (remove_candidate_bit(game, same_r, col, val)) changed = true;
+                        }
+                    }
+                }
+                if (is_same_col && same_c != -1) {
+                    for (int row = 0; row < 9; row++) {
+                        if ((row / 3) != (b / 3)) {
+                            if (remove_candidate_bit(game, row, same_c, val)) changed = true;
+                        }
+                    }
+                }
+                if (changed) return true;
+            }
+        }
+    }
+    return false;
+}
+
+/* --- Niveau 2 : Box-Line Reduction --- */
+static bool silent_box_line_reduction(SudokuGame *game) {
+    bool changed = false;
+
+    for (int r = 0; r < 9; r++) {
+        for (int val = 1; val <= 9; val++) {
+            int same_box = -1;
+            bool is_same_box = true;
+            int count = 0;
+
+            for (int c = 0; c < 9; c++) {
+                if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
+                    count++;
+                    int b = (r / 3) * 3 + (c / 3);
+                    if (same_box == -1) same_box = b;
+                    else if (same_box != b) is_same_box = false;
+                }
+            }
+
+            if (count >= 2 && count <= 3 && is_same_box && same_box != -1) {
+                int start_r = (same_box / 3) * 3;
+                int start_c = (same_box % 3) * 3;
+
+                for (int br = 0; br < 3; br++) {
+                    for (int bc = 0; bc < 3; bc++) {
+                        int curr_r = start_r + br;
+                        int curr_c = start_c + bc;
+                        if (curr_r != r) {
+                            if (remove_candidate_bit(game, curr_r, curr_c, val)) changed = true;
+                        }
+                    }
+                }
+                if (changed) return true;
+            }
+        }
+    }
+
+    for (int c = 0; c < 9; c++) {
+        for (int val = 1; val <= 9; val++) {
+            int same_box = -1;
+            bool is_same_box = true;
+            int count = 0;
+
+            for (int r = 0; r < 9; r++) {
+                if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
+                    count++;
+                    int b = (r / 3) * 3 + (c / 3);
+                    if (same_box == -1) same_box = b;
+                    else if (same_box != b) is_same_box = false;
+                }
+            }
+
+            if (count >= 2 && count <= 3 && is_same_box && same_box != -1) {
+                int start_r = (same_box / 3) * 3;
+                int start_c = (same_box % 3) * 3;
+
+                for (int br = 0; br < 3; br++) {
+                    for (int bc = 0; bc < 3; bc++) {
+                        int curr_r = start_r + br;
+                        int curr_c = start_c + bc;
+                        if (curr_c != c) {
+                            if (remove_candidate_bit(game, curr_r, curr_c, val)) changed = true;
+                        }
+                    }
+                }
+                if (changed) return true;
+            }
+        }
+    }
+    return false;
+}
+
+/* --- Niveau 2 : Triplets Nus --- */
+static bool silent_naked_triples(SudokuGame *game) {
+    bool changed = false;
+
+    for (int unit_type = 0; unit_type < 3; unit_type++) {
+        for (int u = 0; u < 9; u++) {
+            int cells[9][2];
+            for (int i = 0; i < 9; i++) {
+                if (unit_type == 0)      { cells[i][0] = u; cells[i][1] = i; }
+                else if (unit_type == 1) { cells[i][0] = i; cells[i][1] = u; }
+                else                     { cells[i][0] = (u / 3) * 3 + i / 3; cells[i][1] = (u % 3) * 3 + i % 3; }
+            }
+
+            for (int i = 0; i < 7; i++) {
+                int r1 = cells[i][0], c1 = cells[i][1];
+                if (game->player_grid[r1][c1] != 0) continue;
+                uint16_t m1 = game->candidates[r1][c1];
+                if (count_bits(m1) > 3 || count_bits(m1) < 2) continue;
+
+                for (int j = i + 1; j < 8; j++) {
+                    int r2 = cells[j][0], c2 = cells[j][1];
+                    if (game->player_grid[r2][c2] != 0) continue;
+                    uint16_t m2 = game->candidates[r2][c2];
+                    if (count_bits(m2) > 3 || count_bits(m2) < 2) continue;
+
+                    for (int k = j + 1; k < 9; k++) {
+                        int r3 = cells[k][0], c3 = cells[k][1];
+                        if (game->player_grid[r3][c3] != 0) continue;
+                        uint16_t m3 = game->candidates[r3][c3];
+                        if (count_bits(m3) > 3 || count_bits(m3) < 2) continue;
+
+                        uint16_t combined = m1 | m2 | m3;
+
+                        if (count_bits(combined) == 3) {
+                            for (int idx = 0; idx < 9; idx++) {
+                                if (idx == i || idx == j || idx == k) continue;
+                                int r = cells[idx][0], c = cells[idx][1];
+                                for (int v = 1; v <= 9; v++) {
+                                    if (combined & (1 << v)) {
+                                        if (remove_candidate_bit(game, r, c, v)) changed = true;
+                                    }
+                                }
+                            }
+                            if (changed) return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/* --- Niveau 3 : X-Wing (Lignes et Colonnes) --- */
 static bool silent_x_wing(SudokuGame *game) {
     bool changed = false;
+
+    /* 1. X-Wing basé sur les LIGNES */
     for (int val = 1; val <= 9; val++) {
         for (int r1 = 0; r1 < 8; r1++) {
             int cols_r1[9], count_r1 = 0;
@@ -129,6 +329,40 @@ static bool silent_x_wing(SudokuGame *game) {
             }
         }
     }
+
+    /* 2. X-Wing basé sur les COLONNES */
+    for (int val = 1; val <= 9; val++) {
+        for (int c1 = 0; c1 < 8; c1++) {
+            int rows_c1[9], count_c1 = 0;
+            for (int r = 0; r < 9; r++) {
+                if (game->player_grid[r][c1] == 0 && has_candidate(game, r, c1, val)) {
+                    rows_c1[count_c1++] = r;
+                }
+            }
+            if (count_c1 != 2) continue;
+
+            for (int c2 = c1 + 1; c2 < 9; c2++) {
+                int rows_c2[9], count_c2 = 0;
+                for (int r = 0; r < 9; r++) {
+                    if (game->player_grid[r][c2] == 0 && has_candidate(game, r, c2, val)) {
+                        rows_c2[count_c2++] = r;
+                    }
+                }
+                if (count_c2 != 2) continue;
+
+                if (rows_c1[0] == rows_c2[0] && rows_c1[1] == rows_c2[1]) {
+                    int r1 = rows_c1[0], r2 = rows_c1[1];
+                    for (int c = 0; c < 9; c++) {
+                        if (c == c1 || c == c2) continue;
+                        if (remove_candidate_bit(game, r1, c, val)) changed = true;
+                        if (remove_candidate_bit(game, r2, c, val)) changed = true;
+                    }
+                    if (changed) return true;
+                }
+            }
+        }
+    }
+
     return false;
 }
 
@@ -142,20 +376,27 @@ int evaluate_puzzle_difficulty(const SudokuGame *game) {
     while (!check_victory(&temp) && progress) {
         progress = false;
 
-        /* 1. Essai Niveau 0 (Singles) */
+        /* Niveau 0 : Singles */
         if (silent_singles(&temp)) {
             progress = true;
             continue;
         }
 
-        /* 2. Essai Niveau 1 (Paires) */
+        /* Niveau 1 : Paires */
         if (silent_naked_pairs(&temp)) {
             if (max_level_used < 1) max_level_used = 1;
             progress = true;
             continue;
         }
 
-        /* 3. Essai Niveau 3 (X-Wing) */
+        /* Niveau 2 : Intersections et Triplets */
+        if (silent_pointing_pairs(&temp) || silent_box_line_reduction(&temp) || silent_naked_triples(&temp)) {
+            if (max_level_used < 2) max_level_used = 2;
+            progress = true;
+            continue;
+        }
+
+        /* Niveau 3 : X-Wing */
         if (silent_x_wing(&temp)) {
             if (max_level_used < 3) max_level_used = 3;
             progress = true;
@@ -167,5 +408,5 @@ int evaluate_puzzle_difficulty(const SudokuGame *game) {
         return max_level_used;
     }
 
-    return -1; /* Grille bloquée ou nécessitant une stratégie non implémentée */
+    return -1;
 }

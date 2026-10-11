@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "game.h"
 #include "candidates.h"
+#include "bank_loader.h"
 #include "../Generator/generator.h"
 #include "find_naked_single.h"
 #include "find_hidden_single.h"
@@ -98,107 +99,22 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
-static bool requires_pairs_strategy(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    bool progress = true;
-
-    while (progress) {
-        progress = false;
-        compute_autonote(&temp);
-
-        // 1. Recherche de Naked Single
-        for (int r = 0; r < 9 && !progress; r++) {
-            for (int c = 0; c < 9 && !progress; c++) {
-                if (temp.player_grid[r][c] == 0 && count_candidates(&temp, r, c) == 1) {
-                    for (int val = 1; val <= 9; val++) {
-                        if (has_candidate(&temp, r, c, val)) {
-                            temp.player_grid[r][c] = val;
-                            progress = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (progress) continue;
-
-        // 2. Recherche de Hidden Single
-        for (int unit_type = 0; unit_type < 3 && !progress; unit_type++) {
-            for (int u = 0; u < 9 && !progress; u++) {
-                for (int val = 1; val <= 9 && !progress; val++) {
-                    int count = 0;
-                    int target_r = -1, target_c = -1;
-
-                    for (int i = 0; i < 9; i++) {
-                        int r = (unit_type == 0) ? u : (unit_type == 1) ? i : (u / 3) * 3 + i / 3;
-                        int c = (unit_type == 0) ? i : (unit_type == 1) ? u : (u % 3) * 3 + i % 3;
-
-                        if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
-                            count++;
-                            target_r = r;
-                            target_c = c;
-                        }
-                    }
-
-                    if (count == 1) {
-                        temp.player_grid[target_r][target_c] = val;
-                        progress = true;
-                    }
-                }
-            }
-        }
-    }
-
-    for (int r = 0; r < 9; r++) {
-        for (int c = 0; c < 9; c++) {
-            if (temp.player_grid[r][c] == 0) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 void init_game(SudokuGame *game, int difficulty) {
-    printf("Génération d'une grille calibrée pour le niveau %d...\n", difficulty);
+    printf("Chargement d'une grille pour le niveau %d...\n", difficulty);
 
-    int attempts = 0;
-    const int MAX_ATTEMPTS = 100;
-    bool valid_grid = false;
-    int clue_count = 0;
+    /* Correspondance entre le choix du menu (1 à 4) et les niveaux de la banque (0 à 3) */
+    int target_level = difficulty - 1;
 
-    while (!valid_grid && attempts < MAX_ATTEMPTS) {
-        attempts++;
+    if (!load_puzzle_from_bank(game, target_level)) {
+        printf("Fallback : Génération à la volée...\n");
         generate_sudoku(game->initial_grid, game->solution, difficulty);
-
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                game->player_grid[i][j] = game->initial_grid[i][j];
-            }
-        }
-
-        clue_count = 0;
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
-                if (game->initial_grid[r][c] != 0) clue_count++;
+                game->player_grid[r][c] = game->initial_grid[r][c];
             }
         }
-
-        if (difficulty == 1) {
-            valid_grid = (clue_count <= 48);
-        } else if (difficulty == 2) {
-            valid_grid = (clue_count <= 42);
-        } else if (difficulty == 3) {
-            valid_grid = (clue_count <= 34 && requires_pairs_strategy(game));
-        } else if (difficulty >= 4) {
-            valid_grid = (clue_count <= 30 && requires_pairs_strategy(game));
-        }
+        compute_autonote(game);
     }
-
-    compute_autonote(game);
-    printf("Grille validée avec succès (%d indices restants, %d tentative(s)).\n", clue_count, attempts);
 }
 
 void print_game_board(const SudokuGame *game) {

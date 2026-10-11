@@ -888,16 +888,16 @@ int check_uniqueness() {
 void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9], int difficulty) {
     silent = TRUE;
 
-    int target_clues = 41;
+int target_clues = 41;
 
     if (difficulty == 1) {
-        target_clues = 48; // Facile
+        target_clues = 48;
     } else if (difficulty == 2) {
-        target_clues = 41; // Moyen
+        target_clues = 38;
     } else if (difficulty == 3) {
-        target_clues = 32; // Difficile
+        target_clues = 28;
     } else {
-        target_clues = 28; // Expert
+        target_clues = 22 + (rand() % 5); /* 22 à 26 indices */
     }
 
     /* 1. Génération d'une grille complète 9x9 */
