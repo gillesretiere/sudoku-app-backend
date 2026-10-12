@@ -6,6 +6,7 @@
 typedef struct {
     int level;         /* 0, 1, 2, 3 ou -1 (rejetée) */
     int x_wing_count;  /* Nombre de X-Wings réellement nécessaires */
+    int y_wing_count;  /* Nombre de Y-Wings exécutés */
 } EvalResult;
 
 /**

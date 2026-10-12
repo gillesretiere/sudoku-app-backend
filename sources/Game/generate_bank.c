@@ -6,22 +6,24 @@
 #include "solver_eval.h"
 
 #define TARGET_PER_LEVEL 20
+#define TARGET_N3_SUB 7 /* Target environ 7 pour X-Wing seul et Y-Wing seul */
 
 int main(void) {
     srand((unsigned int)time(NULL));
 
     FILE *file = fopen("puzzles_bank.txt", "w");
     if (!file) {
-        printf("Erreur : Impossible de créer le fichier puzzles_bank.txt\n");
+        printf("❌ Erreur : Impossible de créer le fichier puzzles_bank.txt\n");
         return EXIT_FAILURE;
     }
 
     int counts[4] = {0, 0, 0, 0};
+    int n3_x_only = 0;
+    int n3_y_only = 0;
+    int n3_both = 0;
     int total_attempts = 0;
-    int rejected_unsolvable = 0;
-    int rejected_too_easy = 0;
 
-    printf("Démarrage de la génération ciblée N3...\n\n");
+    printf("🚀 Démarrage de la génération équilibrée de la banque...\n\n");
 
     while (counts[0] < TARGET_PER_LEVEL || counts[1] < TARGET_PER_LEVEL || 
            counts[2] < TARGET_PER_LEVEL || counts[3] < TARGET_PER_LEVEL) {
@@ -51,20 +53,27 @@ int main(void) {
 
         EvalResult res = evaluate_puzzle_difficulty(&game);
 
-        if (res.level == -1) {
-            rejected_unsolvable++;
-        } else if (res.level < 3 && counts[3] < TARGET_PER_LEVEL) {
-            rejected_too_easy++;
-        }
-
         bool valid = false;
-        if (res.level == 3 && res.x_wing_count >= 1 && res.x_wing_count <= 3) {
-            valid = true;
-        } else if (res.level >= 0 && res.level < 3) {
+
+        /* Validation pour N0, N1, N2 */
+        if (res.level >= 0 && res.level < 3 && counts[res.level] < TARGET_PER_LEVEL) {
             valid = true;
         }
+        /* Validation équilibrée pour N3 */
+        else if (res.level == 3 && counts[3] < TARGET_PER_LEVEL) {
+            if (res.x_wing_count > 0 && res.y_wing_count == 0 && n3_x_only < TARGET_N3_SUB) {
+                n3_x_only++;
+                valid = true;
+            } else if (res.x_wing_count == 0 && res.y_wing_count > 0 && n3_y_only < TARGET_N3_SUB) {
+                n3_y_only++;
+                valid = true;
+            } else if (res.x_wing_count > 0 && res.y_wing_count > 0 && n3_both < (TARGET_PER_LEVEL - 2 * TARGET_N3_SUB)) {
+                n3_both++;
+                valid = true;
+            }
+        }
 
-        if (valid && counts[res.level] < TARGET_PER_LEVEL) {
+        if (valid) {
             counts[res.level]++;
 
             fprintf(file, "%d;%d;", res.level, clue_count);
@@ -82,21 +91,19 @@ int main(void) {
             fprintf(file, "\n");
             fflush(file);
 
-            printf("Grille Niveau %d enregistrée (%d indices, %d X-Wing) | N0:%d/%d, N1:%d/%d, N2:%d/%d, N3:%d/%d\n",
-                   res.level, clue_count, res.x_wing_count,
-                   counts[0], TARGET_PER_LEVEL, counts[1], TARGET_PER_LEVEL,
-                   counts[2], TARGET_PER_LEVEL, counts[3], TARGET_PER_LEVEL);
-        }
-
-        if (total_attempts % 100 == 0 && counts[3] < TARGET_PER_LEVEL) {
-            printf("Tentatives : %d... (N3 : %d/%d | Trop faciles : %d, Trop complexes/Bloquées : %d)\n",
-                   total_attempts, counts[3], TARGET_PER_LEVEL, rejected_too_easy, rejected_unsolvable);
+            if (res.level == 3) {
+                printf("✅ Grille N3 enregistrée (%d indices) | X-Wing: %d, Y-Wing: %d [X-Seul: %d, Y-Seul: %d, Combiné: %d]\n",
+                       clue_count, res.x_wing_count, res.y_wing_count, n3_x_only, n3_y_only, n3_both);
+            } else {
+                printf("✅ Grille Niveau %d enregistrée (%d indices) | N0:%d, N1:%d, N2:%d, N3:%d\n",
+                       res.level, clue_count, counts[0], counts[1], counts[2], counts[3]);
+            }
         }
     }
 
     fclose(file);
-    printf("\nGénération terminée avec succès en %d tentatives !\n", total_attempts);
-    printf("Fichier sauvegardé : puzzles_bank.txt\n");
+    printf("\n🎉 Génération terminée avec succès en %d tentatives !\n", total_attempts);
+    printf("📄 Fichier sauvegardé : puzzles_bank.txt\n");
 
     return EXIT_SUCCESS;
 }

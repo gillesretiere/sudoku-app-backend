@@ -514,10 +514,14 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
             continue;
         }
 
-        /* 4. Niveau 3 : X-Wing ou Y-Wing */
-        if (silent_x_wing(&temp) || silent_y_wing(&temp)) {
+        /* 4. Niveau 3 : Évaluation indépendante de X-Wing et Y-Wing (sans court-circuit) */
+        bool found_x = silent_x_wing(&temp);
+        bool found_y = silent_y_wing(&temp);
+
+        if (found_x || found_y) {
             if (res.level < 3) res.level = 3;
-            res.x_wing_count++;
+            if (found_x) res.x_wing_count++;
+            if (found_y) res.y_wing_count++;
             progress = true;
             continue;
         }

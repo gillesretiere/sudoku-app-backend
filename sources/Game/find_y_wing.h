@@ -11,6 +11,6 @@
  * @param game Pointeur sur la structure du jeu
  * @return true si un Y-Wing a été trouvé et a permis une élimination, false sinon.
  */
-bool find_y_wing(SudokuGame *game);
+bool find_y_wing(const SudokuGame *game);
 
 #endif

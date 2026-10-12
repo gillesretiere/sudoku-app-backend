@@ -783,42 +783,6 @@ static void shuffle_clue_list(void) {
     }
 }
 
-/* Creuse des trous dans la grille de façon aléatoire jusqu'au nombre d'indices visé */
-static void dig_holes(char g[9][9], int target_clues) {
-    int positions[81];
-    for (int i = 0; i < 81; i++) {
-        positions[i] = i;
-    }
-
-    /* Mélange de Fisher-Yates des 81 positions */
-    for (int i = 80; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int temp = positions[i];
-        positions[i] = positions[j];
-        positions[j] = temp;
-    }
-
-    int current_clues = 81;
-
-    for (int i = 0; i < 81 && current_clues > target_clues; i++) {
-        int pos = positions[i];
-        int r = pos / 9;
-        int c = pos % 9;
-
-        if (g[r][c] == 0) continue;
-
-        char backup = g[r][c];
-        g[r][c] = 0;
-
-        /* Si la grille reste unique sans ce chiffre, le retrait est conservé */
-        if (is_unique(g)) {
-            current_clues--;
-        } else {
-            g[r][c] = backup; /* Annulation sinon */
-        }
-    }
-}
-
 /* Creusement symétrique optimisé pour favoriser les structures X-Wing */
 static void dig_holes_symmetric(char g[9][9], int target_clues) {
     int current_clues = 81;
@@ -851,68 +815,6 @@ static void dig_holes_symmetric(char g[9][9], int target_clues) {
         } else {
             g[r1][c1] = b1;
             g[r2][c2] = b2;
-        }
-    }
-}
-
-static void dig_holes_deep(char g[9][9], int target_clues) {
-    int current_clues = 81;
-
-    /* Phase 1 : Creusement symétrique */
-    int positions[41];
-    for (int i = 0; i < 41; i++) positions[i] = i;
-
-    for (int i = 40; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int temp = positions[i];
-        positions[i] = positions[j];
-        positions[j] = temp;
-    }
-
-    for (int i = 0; i < 41 && current_clues > target_clues; i++) {
-        int pos1 = positions[i];
-        int r1 = pos1 / 9, c1 = pos1 % 9;
-        int r2 = 8 - r1, c2 = 8 - c1;
-
-        if (g[r1][c1] == 0) continue;
-
-        char b1 = g[r1][c1], b2 = g[r2][c2];
-        g[r1][c1] = 0;
-        g[r2][c2] = 0;
-        int removed = (r1 == r2 && c1 == c2) ? 1 : 2;
-
-        if (is_unique(g)) {
-            current_clues -= removed;
-        } else {
-            g[r1][c1] = b1;
-            g[r2][c2] = b2;
-        }
-    }
-
-    /* Phase 2 : Finition case par case si le creusement symétrique a bloqué */
-    if (current_clues > target_clues) {
-        int all_pos[81];
-        for (int i = 0; i < 81; i++) all_pos[i] = i;
-
-        for (int i = 80; i > 0; i--) {
-            int j = rand() % (i + 1);
-            int temp = all_pos[i];
-            all_pos[i] = all_pos[j];
-            all_pos[j] = temp;
-        }
-
-        for (int i = 0; i < 81 && current_clues > target_clues; i++) {
-            int r = all_pos[i] / 9, c = all_pos[i] % 9;
-            if (g[r][c] == 0) continue;
-
-            char backup = g[r][c];
-            g[r][c] = 0;
-
-            if (is_unique(g)) {
-                current_clues--;
-            } else {
-                g[r][c] = backup;
-            }
         }
     }
 }
