@@ -11,6 +11,7 @@
 #include "find_box_line_reduction.h"
 #include "find_naked_triple.h"
 #include "find_x_wing.h"
+#include "find_y_wing.h"
 
 // Séquences de couleurs ANSI pour le terminal
 #define COLOR_RESET "\033[0m"
@@ -63,11 +64,13 @@ static const char *strat2_names[] = {
 
 // --- Niveau 3 : Stratégies professionnelles ---
 static StrategyFn strat3[] = {
-    find_x_wing
+    find_x_wing,
+    find_y_wing
 };
 
 static const char *strat3_names[] = {
-    "X-Wing"
+    "X-Wing",
+    "Y-Wing"
 };
 
 static StrategyLevel levels[] = {

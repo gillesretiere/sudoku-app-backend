@@ -412,6 +412,78 @@ static bool silent_x_wing(SudokuGame *game) {
     return false;
 }
 
+/* --- Niveau 3 : Y-Wing (Silencieux) --- */
+static bool silent_y_wing(SudokuGame *game) {
+    bool changed = false;
+
+    for (int pr = 0; pr < 9; pr++) {
+        for (int pc = 0; pc < 9; pc++) {
+            if (game->player_grid[pr][pc] != 0 || count_candidates(game, pr, pc) != 2) continue;
+
+            int px = -1, py = -1;
+            for (int v = 1; v <= 9; v++) {
+                if (has_candidate(game, pr, pc, v)) {
+                    if (px == -1) px = v;
+                    else py = v;
+                }
+            }
+
+            for (int r1 = 0; r1 < 9; r1++) {
+                for (int c1 = 0; c1 < 9; c1++) {
+                    if ((r1 == pr && c1 == pc) || !(r1 == pr || c1 == pc || (r1 / 3 == pr / 3 && c1 / 3 == pc / 3))) continue;
+                    if (game->player_grid[r1][c1] != 0 || count_candidates(game, r1, c1) != 2) continue;
+
+                    int p1_v1 = -1, p1_v2 = -1;
+                    for (int v = 1; v <= 9; v++) {
+                        if (has_candidate(game, r1, c1, v)) {
+                            if (p1_v1 == -1) p1_v1 = v;
+                            else p1_v2 = v;
+                        }
+                    }
+
+                    int z = -1;
+                    if ((p1_v1 == px && p1_v2 != py) || (p1_v2 == px && p1_v1 != py)) z = (p1_v1 == px) ? p1_v2 : p1_v1;
+                    else if ((p1_v1 == py && p1_v2 != px) || (p1_v2 == py && p1_v1 != px)) z = (p1_v1 == py) ? p1_v2 : p1_v1;
+                    if (z == -1) continue;
+
+                    for (int r2 = 0; r2 < 9; r2++) {
+                        for (int c2 = 0; c2 < 9; c2++) {
+                            if ((r2 == r1 && c2 == c1) || (r2 == pr && c2 == pc)) continue;
+                            if (!(r2 == pr || c2 == pc || (r2 / 3 == pr / 3 && c2 / 3 == pc / 3))) continue;
+                            if (game->player_grid[r2][c2] != 0 || count_candidates(game, r2, c2) != 2) continue;
+
+                            int p2_v1 = -1, p2_v2 = -1;
+                            for (int v = 1; v <= 9; v++) {
+                                if (has_candidate(game, r2, c2, v)) {
+                                    if (p2_v1 == -1) p2_v1 = v;
+                                    else p2_v2 = v;
+                                }
+                            }
+
+                            int other_p = (p1_v1 == px || p1_v2 == px) ? py : px;
+                            if (!((p2_v1 == z && p2_v2 == other_p) || (p2_v1 == other_p && p2_v2 == z))) continue;
+
+                            for (int er = 0; er < 9; er++) {
+                                for (int ec = 0; ec < 9; ec++) {
+                                    if (game->player_grid[er][ec] == 0) {
+                                        bool see1 = (er == r1 || ec == c1 || (er / 3 == r1 / 3 && ec / 3 == c1 / 3));
+                                        bool see2 = (er == r2 || ec == c2 || (er / 3 == r2 / 3 && ec / 3 == c2 / 3));
+                                        if (see1 && see2 && !(er == r1 && ec == c1) && !(er == r2 && ec == c2)) {
+                                            if (remove_candidate_bit(game, er, ec, z)) changed = true;
+                                        }
+                                    }
+                                }
+                            }
+                            if (changed) return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
 EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
     SudokuGame temp = *game;
     EvalResult res = { .level = 0, .x_wing_count = 0 };
@@ -442,8 +514,8 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
             continue;
         }
 
-        /* 4. X-Wing */
-        if (silent_x_wing(&temp)) {
+        /* 4. Niveau 3 : X-Wing ou Y-Wing */
+        if (silent_x_wing(&temp) || silent_y_wing(&temp)) {
             if (res.level < 3) res.level = 3;
             res.x_wing_count++;
             progress = true;
