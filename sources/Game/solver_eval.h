@@ -3,16 +3,14 @@
 
 #include "game.h"
 
+typedef struct {
+    int level;         /* 0, 1, 2, 3 ou -1 (rejetée) */
+    int x_wing_count;  /* Nombre de X-Wings réellement nécessaires */
+} EvalResult;
+
 /**
- * Évalue la difficulté exacte d'une grille en la résolvant silencieusement.
- * 
- * Valeurs de retour :
- *   0 : Résoluble uniquement avec Niveau 0 (Singles)
- *   1 : Requiert au moins le Niveau 1 (Paires)
- *   2 : Requiert au moins le Niveau 2 (Intersections / Triplets)
- *   3 : Requiert au moins le Niveau 3 (X-Wing)
- *  -1 : Impossible à résoudre avec les stratégies actuelles (rejetée)
+ * Évalue la difficulté exacte d'une grille et compte les X-Wings requis.
  */
-int evaluate_puzzle_difficulty(const SudokuGame *game);
+EvalResult evaluate_puzzle_difficulty(const SudokuGame *game);
 
 #endif

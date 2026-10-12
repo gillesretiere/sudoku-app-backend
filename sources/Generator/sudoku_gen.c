@@ -819,6 +819,104 @@ static void dig_holes(char g[9][9], int target_clues) {
     }
 }
 
+/* Creusement symétrique optimisé pour favoriser les structures X-Wing */
+static void dig_holes_symmetric(char g[9][9], int target_clues) {
+    int current_clues = 81;
+    int positions[41];
+
+    for (int i = 0; i < 41; i++) positions[i] = i;
+
+    /* Mélange de Fisher-Yates */
+    for (int i = 40; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = positions[i];
+        positions[i] = positions[j];
+        positions[j] = temp;
+    }
+
+    for (int i = 0; i < 41 && current_clues > target_clues; i++) {
+        int pos1 = positions[i];
+        int r1 = pos1 / 9, c1 = pos1 % 9;
+        int r2 = 8 - r1, c2 = 8 - c1;
+
+        if (g[r1][c1] == 0) continue;
+
+        char b1 = g[r1][c1], b2 = g[r2][c2];
+        g[r1][c1] = 0;
+        g[r2][c2] = 0;
+        int removed = (r1 == r2 && c1 == c2) ? 1 : 2;
+
+        if (is_unique(g)) {
+            current_clues -= removed;
+        } else {
+            g[r1][c1] = b1;
+            g[r2][c2] = b2;
+        }
+    }
+}
+
+static void dig_holes_deep(char g[9][9], int target_clues) {
+    int current_clues = 81;
+
+    /* Phase 1 : Creusement symétrique */
+    int positions[41];
+    for (int i = 0; i < 41; i++) positions[i] = i;
+
+    for (int i = 40; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = positions[i];
+        positions[i] = positions[j];
+        positions[j] = temp;
+    }
+
+    for (int i = 0; i < 41 && current_clues > target_clues; i++) {
+        int pos1 = positions[i];
+        int r1 = pos1 / 9, c1 = pos1 % 9;
+        int r2 = 8 - r1, c2 = 8 - c1;
+
+        if (g[r1][c1] == 0) continue;
+
+        char b1 = g[r1][c1], b2 = g[r2][c2];
+        g[r1][c1] = 0;
+        g[r2][c2] = 0;
+        int removed = (r1 == r2 && c1 == c2) ? 1 : 2;
+
+        if (is_unique(g)) {
+            current_clues -= removed;
+        } else {
+            g[r1][c1] = b1;
+            g[r2][c2] = b2;
+        }
+    }
+
+    /* Phase 2 : Finition case par case si le creusement symétrique a bloqué */
+    if (current_clues > target_clues) {
+        int all_pos[81];
+        for (int i = 0; i < 81; i++) all_pos[i] = i;
+
+        for (int i = 80; i > 0; i--) {
+            int j = rand() % (i + 1);
+            int temp = all_pos[i];
+            all_pos[i] = all_pos[j];
+            all_pos[j] = temp;
+        }
+
+        for (int i = 0; i < 81 && current_clues > target_clues; i++) {
+            int r = all_pos[i] / 9, c = all_pos[i] % 9;
+            if (g[r][c] == 0) continue;
+
+            char backup = g[r][c];
+            g[r][c] = 0;
+
+            if (is_unique(g)) {
+                current_clues--;
+            } else {
+                g[r][c] = backup;
+            }
+        }
+    }
+}
+
 void remove_more_clues(int kPuz, int target_clues) {
     (void)kPuz;
 
@@ -887,47 +985,29 @@ int check_uniqueness() {
  */
 void generate_sudoku(char puzzle_out[9][9], char solution_out[9][9], int difficulty) {
     silent = TRUE;
+    int target_clues = 41;
 
-int target_clues = 41;
+    if (difficulty == 1)      target_clues = 48;
+    else if (difficulty == 2) target_clues = 38;
+    else if (difficulty == 3) target_clues = 28;
+    else                      target_clues = 26;
 
-    if (difficulty == 1) {
-        target_clues = 48;
-    } else if (difficulty == 2) {
-        target_clues = 38;
-    } else if (difficulty == 3) {
-        target_clues = 28;
-    } else {
-        target_clues = 22 + (rand() % 5); /* 22 à 26 indices */
-    }
-
-    /* 1. Génération d'une grille complète 9x9 */
     do { 
         init(); 
     } while (fill());
 
-    /* 2. Enregistrement de la solution */
     for (int k = 0; k < 9; k++) {
         for (int j = 0; j < 9; j++) {
             solved[k][j] = grid[k][j];
         }
     }
 
-    /* 3. Creusement direct et garanti unique */
-    dig_holes(grid, target_clues);
+    dig_holes_symmetric(grid, target_clues);
 
-    /* 4. Copie des résultats */
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
             puzzle_out[i][j] = grid[i][j];
             solution_out[i][j] = solved[i][j];
         }
     }
-    /* 3. Export au format HTML */
-#ifdef SAVE_HTML_PUZZLE
-    save_html(puzzle_string, puzzle_string, "p");
-#endif
-
-#ifdef SAVE_HTML_SOLUTION
-    save_html(solution_string, solution_string, "s");
-#endif
 }

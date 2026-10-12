@@ -5,3 +5,4 @@ sources/Solver/sudoku_app_solver
 sources/Generator/sudoku_gen
 sources/Game/sudoku_game
 sources/Game/puzzles_bank.txt
+sources/Game/build_bank

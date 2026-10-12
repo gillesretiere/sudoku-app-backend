@@ -3,7 +3,6 @@
 #include "solver_eval.h"
 #include "candidates.h"
 
-/* Supprime un bit de candidat pour une case donnée */
 static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     if (game->player_grid[r][c] == 0 && (game->candidates[r][c] & (1 << val))) {
         game->candidates[r][c] &= ~(1 << val);
@@ -12,7 +11,6 @@ static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     return false;
 }
 
-/* Compte le nombre de bits actifs dans le masque de candidats */
 static int count_bits(uint16_t mask) {
     int count = 0;
     for (int v = 1; v <= 9; v++) {
@@ -21,7 +19,6 @@ static int count_bits(uint16_t mask) {
     return count;
 }
 
-/* Place un chiffre et retire ce candidat uniquement de sa ligne, colonne et bloc 3x3 */
 static void place_digit(SudokuGame *game, int r, int c, int val) {
     game->player_grid[r][c] = (char)val;
     game->candidates[r][c] = 0;
@@ -42,7 +39,6 @@ static void place_digit(SudokuGame *game, int r, int c, int val) {
 
 /* --- Niveau 0 : Singles --- */
 static bool silent_singles(SudokuGame *game) {
-    /* 1. Naked Single */
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (game->player_grid[r][c] == 0 && count_candidates(game, r, c) == 1) {
@@ -56,7 +52,6 @@ static bool silent_singles(SudokuGame *game) {
         }
     }
 
-    /* 2. Hidden Single */
     for (int unit_type = 0; unit_type < 3; unit_type++) {
         for (int u = 0; u < 9; u++) {
             for (int val = 1; val <= 9; val++) {
@@ -109,6 +104,59 @@ static bool silent_naked_pairs(SudokuGame *game) {
                                 if (mask & (1 << v)) {
                                     if (remove_candidate_bit(game, r, c, v)) changed = true;
                                 }
+                            }
+                        }
+                        if (changed) return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/* --- Niveau 1 : Paires Cachées --- */
+static bool silent_hidden_pairs(SudokuGame *game) {
+    bool changed = false;
+    for (int unit_type = 0; unit_type < 3; unit_type++) {
+        for (int u = 0; u < 9; u++) {
+            for (int v1 = 1; v1 < 9; v1++) {
+                for (int v2 = v1 + 1; v2 <= 9; v2++) {
+                    int count = 0;
+                    int pos1 = -1, pos2 = -1;
+                    bool valid = true;
+
+                    for (int i = 0; i < 9; i++) {
+                        int r = (unit_type == 0) ? u : (unit_type == 1) ? i : (u / 3) * 3 + i / 3;
+                        int c = (unit_type == 0) ? i : (unit_type == 1) ? u : (u % 3) * 3 + i % 3;
+
+                        if (game->player_grid[r][c] == 0) {
+                            bool h1 = has_candidate(game, r, c, v1);
+                            bool h2 = has_candidate(game, r, c, v2);
+
+                            if (h1 || h2) {
+                                if (h1 && h2) {
+                                    count++;
+                                    if (pos1 == -1) pos1 = i;
+                                    else if (pos2 == -1) pos2 = i;
+                                } else {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (valid && count == 2) {
+                        int r1 = (unit_type == 0) ? u : (unit_type == 1) ? pos1 : (u / 3) * 3 + pos1 / 3;
+                        int c1 = (unit_type == 0) ? pos1 : (unit_type == 1) ? u : (u % 3) * 3 + pos1 % 3;
+                        int r2 = (unit_type == 0) ? u : (unit_type == 1) ? pos2 : (u / 3) * 3 + pos2 / 3;
+                        int c2 = (unit_type == 0) ? pos2 : (unit_type == 1) ? u : (u % 3) * 3 + pos2 % 3;
+
+                        for (int v = 1; v <= 9; v++) {
+                            if (v != v1 && v != v2) {
+                                if (remove_candidate_bit(game, r1, c1, v)) changed = true;
+                                if (remove_candidate_bit(game, r2, c2, v)) changed = true;
                             }
                         }
                         if (changed) return true;
@@ -293,11 +341,10 @@ static bool silent_naked_triples(SudokuGame *game) {
     return false;
 }
 
-/* --- Niveau 3 : X-Wing (Lignes et Colonnes) --- */
+/* --- Niveau 3 : X-Wing --- */
 static bool silent_x_wing(SudokuGame *game) {
     bool changed = false;
 
-    /* 1. X-Wing basé sur les LIGNES */
     for (int val = 1; val <= 9; val++) {
         for (int r1 = 0; r1 < 8; r1++) {
             int cols_r1[9], count_r1 = 0;
@@ -330,7 +377,6 @@ static bool silent_x_wing(SudokuGame *game) {
         }
     }
 
-    /* 2. X-Wing basé sur les COLONNES */
     for (int val = 1; val <= 9; val++) {
         for (int c1 = 0; c1 < 8; c1++) {
             int rows_c1[9], count_c1 = 0;
@@ -366,9 +412,9 @@ static bool silent_x_wing(SudokuGame *game) {
     return false;
 }
 
-int evaluate_puzzle_difficulty(const SudokuGame *game) {
+EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
     SudokuGame temp = *game;
-    int max_level_used = 0;
+    EvalResult res = { .level = 0, .x_wing_count = 0 };
     bool progress = true;
 
     compute_autonote(&temp);
@@ -376,37 +422,39 @@ int evaluate_puzzle_difficulty(const SudokuGame *game) {
     while (!check_victory(&temp) && progress) {
         progress = false;
 
-        /* Niveau 0 : Singles */
+        /* 1. Singles */
         if (silent_singles(&temp)) {
             progress = true;
             continue;
         }
 
-        /* Niveau 1 : Paires */
-        if (silent_naked_pairs(&temp)) {
-            if (max_level_used < 1) max_level_used = 1;
+        /* 2. Paires (Nues et Cachées) */
+        if (silent_naked_pairs(&temp) || silent_hidden_pairs(&temp)) {
+            if (res.level < 1) res.level = 1;
             progress = true;
             continue;
         }
 
-        /* Niveau 2 : Intersections et Triplets */
+        /* 3. Intersections & Triplets */
         if (silent_pointing_pairs(&temp) || silent_box_line_reduction(&temp) || silent_naked_triples(&temp)) {
-            if (max_level_used < 2) max_level_used = 2;
+            if (res.level < 2) res.level = 2;
             progress = true;
             continue;
         }
 
-        /* Niveau 3 : X-Wing */
+        /* 4. X-Wing */
         if (silent_x_wing(&temp)) {
-            if (max_level_used < 3) max_level_used = 3;
+            if (res.level < 3) res.level = 3;
+            res.x_wing_count++;
             progress = true;
             continue;
         }
     }
 
     if (check_victory(&temp)) {
-        return max_level_used;
+        return res;
     }
 
-    return -1;
+    res.level = -1;
+    return res;
 }
