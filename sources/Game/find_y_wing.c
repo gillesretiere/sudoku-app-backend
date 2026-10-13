@@ -3,11 +3,13 @@
 #include "find_y_wing.h"
 #include "candidates.h"
 
+/* Vérifie si deux cases partagent une ligne, une colonne ou un bloc 3x3 */
 static bool can_see(int r1, int c1, int r2, int c2) {
     if (r1 == r2 && c1 == c2) return false;
     return (r1 == r2 || c1 == c2 || (r1 / 3 == r2 / 3 && c1 / 3 == c2 / 3));
 }
 
+/* Extrait les deux candidats d'une case bivalente */
 static bool get_bivalent_values(const SudokuGame *game, int r, int c, int *v1, int *v2) {
     if (game->player_grid[r][c] != 0 || count_candidates(game, r, c) != 2) {
         return false;
@@ -65,10 +67,13 @@ bool find_y_wing(const SudokuGame *game) {
                                 continue;
                             }
 
-                            /* Éliminations possibles */
+                            /* Éliminations possibles : cases qui voient Pince 1 et Pince 2 */
                             bool can_eliminate = false;
                             for (int er = 0; er < 9; er++) {
                                 for (int ec = 0; ec < 9; ec++) {
+                                    if ((er == pr && ec == pc) || (er == r1 && ec == c1) || (er == r2 && ec == c2)) {
+                                        continue;
+                                    }
                                     if (temp.player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
                                         if (has_candidate(&temp, er, ec, z)) {
                                             can_eliminate = true;
@@ -80,29 +85,32 @@ bool find_y_wing(const SudokuGame *game) {
                             if (can_eliminate) {
                                 clear_highlights(mutable_game);
 
-                                /* 1. Coloration du Pivot : px en Magenta, py en Cyan */
-                                mutable_game->highlight_magenta[pr][pc] |= (1 << px);
-                                mutable_game->highlight_cyan[pr][pc] |= (1 << py);
+                                /* 1. Coloration du Pivot : px en Bleu (Cyan), py en Magenta */
+                                mutable_game->highlight_cyan[pr][pc] |= (1 << px);
+                                mutable_game->highlight_magenta[pr][pc] |= (1 << py);
 
-                                /* 2. Coloration Pince 1 */
+                                /* 2. Coloration de la Pince 1 */
                                 if (p1_shared == px) {
-                                    mutable_game->highlight_magenta[r1][c1] |= (1 << px);
+                                    mutable_game->highlight_cyan[r1][c1] |= (1 << px);
                                 } else {
-                                    mutable_game->highlight_cyan[r1][c1] |= (1 << py);
+                                    mutable_game->highlight_magenta[r1][c1] |= (1 << py);
                                 }
-                                mutable_game->highlight_green[r1][c1] |= (1 << z);
+                                mutable_game->highlight_green[r1][c1] |= (1 << z); /* Candidate z en Vert */
 
-                                /* 3. Coloration Pince 2 */
+                                /* 3. Coloration de la Pince 2 */
                                 if (p2_shared == px) {
-                                    mutable_game->highlight_magenta[r2][c2] |= (1 << px);
+                                    mutable_game->highlight_cyan[r2][c2] |= (1 << px);
                                 } else {
-                                    mutable_game->highlight_cyan[r2][c2] |= (1 << py);
+                                    mutable_game->highlight_magenta[r2][c2] |= (1 << py);
                                 }
-                                mutable_game->highlight_green[r2][c2] |= (1 << z);
+                                mutable_game->highlight_green[r2][c2] |= (1 << z); /* Candidate z en Vert */
 
-                                /* 4. Coloration en Rouge des candidats z à éliminer */
+                                /* 4. Coloration en Rouge des candidats z éliminés */
                                 for (int er = 0; er < 9; er++) {
                                     for (int ec = 0; ec < 9; ec++) {
+                                        if ((er == pr && ec == pc) || (er == r1 && ec == c1) || (er == r2 && ec == c2)) {
+                                            continue;
+                                        }
                                         if (temp.player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
                                             if (has_candidate(&temp, er, ec, z)) {
                                                 mutable_game->highlight_red[er][ec] |= (1 << z);
@@ -117,7 +125,7 @@ bool find_y_wing(const SudokuGame *game) {
                                 printf("   Le candidat %d est donc obligatoirement présent dans l'une des deux pinces.\n\n", z);
 
                                 printf("🎯 APPLICATION :\n");
-                                printf("   Case Pivot : (%d, %d) [Candidats : \033[1;35m%d\033[0m, \033[1;36m%d\033[0m]\n", pr + 1, pc + 1, px, py);
+                                printf("   Case Pivot : (%d, %d) [Candidats : \033[1;36m%d\033[0m, \033[1;35m%d\033[0m]\n", pr + 1, pc + 1, px, py);
                                 printf("   Pince 1 : (%d, %d) | Pince 2 : (%d, %d)\n", r1 + 1, c1 + 1, r2 + 1, c2 + 1);
                                 printf("   👉 Action : Élimination du \033[1;31mcandidat %d\033[0m dans les cases communes aux deux pinces.\n", z);
                                 return true;

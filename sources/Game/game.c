@@ -281,19 +281,19 @@ void print_candidates_grid(const SudokuGame *game) {
 
                         bool is_active  = has_candidate(game, r, c, candidate_val);
                         bool is_red     = is_active && ((game->highlight_red[r][c] & (1 << candidate_val)) != 0);
-                        bool is_magenta = is_active && ((game->highlight_magenta[r][c] & (1 << candidate_val)) != 0);
-                        bool is_cyan    = is_active && ((game->highlight_cyan[r][c] & (1 << candidate_val)) != 0);
                         bool is_green   = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
+                        bool is_cyan    = is_active && ((game->highlight_cyan[r][c] & (1 << candidate_val)) != 0);
+                        bool is_magenta = is_active && ((game->highlight_magenta[r][c] & (1 << candidate_val)) != 0);
 
                         if (is_active) {
                             if (is_red) {
                                 printf("%s%d%s", COLOR_RED, candidate_val, COLOR_RESET);
-                            } else if (is_magenta) {
-                                printf("%s%d%s", COLOR_MAGENTA, candidate_val, COLOR_RESET);
-                            } else if (is_cyan) {
-                                printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
                             } else if (is_green) {
                                 printf("%s%d%s", COLOR_GREEN, candidate_val, COLOR_RESET);
+                            } else if (is_cyan) {
+                                printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
+                            } else if (is_magenta) {
+                                printf("%s%d%s", COLOR_MAGENTA, candidate_val, COLOR_RESET);
                             } else {
                                 printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
                             }
@@ -305,7 +305,7 @@ void print_candidates_grid(const SudokuGame *game) {
                             printf(" ");
                         }
                     }
-                    printf(" ");
+                    printf(" ");    
                 }
             }
             printf("|\n");
