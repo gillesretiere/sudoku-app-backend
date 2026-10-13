@@ -17,6 +17,8 @@
 #define COLOR_RESET "\033[0m"
 #define COLOR_GRAY  "\033[90m"
 #define COLOR_WHITE "\033[1;37m"
+#define COLOR_RED   "\033[1;31m"  // Rouge vif pour les éliminations
+#define COLOR_CYAN  "\033[1;36m"  // Cyan/Vert vif pour les candidats pivots
 
 typedef bool (*StrategyFn)(const SudokuGame *);
 
@@ -70,7 +72,7 @@ static StrategyFn strat3[] = {
 
 static const char *strat3_names[] = {
     "X-Wing",
-    "Y-Wing"
+    "Y-Wing (XY-Wing)"
 };
 
 static StrategyLevel levels[] = {
@@ -102,10 +104,19 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
+void clear_highlights(SudokuGame *game) {
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            game->highlight_green[r][c] = 0;
+            game->highlight_red[r][c] = 0;
+        }
+    }
+}
+
 void init_game(SudokuGame *game, int difficulty) {
+    clear_highlights(game);
     printf("Chargement d'une grille pour le niveau %d...\n", difficulty);
 
-    /* Correspondance entre le choix du menu (1 à 4) et les niveaux de la banque (0 à 3) */
     int target_level = difficulty - 1;
 
     if (!load_puzzle_from_bank(game, target_level)) {
@@ -116,8 +127,8 @@ void init_game(SudokuGame *game, int difficulty) {
                 game->player_grid[r][c] = game->initial_grid[r][c];
             }
         }
-        compute_autonote(game);
     }
+    compute_autonote(game);
 }
 
 void print_game_board(const SudokuGame *game) {
@@ -195,6 +206,7 @@ bool make_move(SudokuGame *game, int row, int col, int value) {
     }
 
     game->player_grid[row][col] = (char)value;
+    clear_highlights(game);
     compute_autonote(game);
     return true;
 }
@@ -211,6 +223,7 @@ bool check_victory(const SudokuGame *game) {
 }
 
 void provide_hint(const SudokuGame *game) {
+    clear_highlights((SudokuGame *)game);
     printf("\n--- RECHERCHE D'UN INDICE ---\n");
 
     for (int l = 0; l < N_LEVELS; l++) {
@@ -232,34 +245,44 @@ void provide_hint(const SudokuGame *game) {
 
 void print_candidates_grid(const SudokuGame *game) {
     printf("\n==== GRILLE DES CANDIDATS (PENCILMARKS) ====\n");
+    const char *border = "+---------------------+---------------------+---------------------+";
 
     for (int r = 0; r < 9; r++) {
         if (r % 3 == 0) {
-            printf("+-----------------+-----------------+-----------------+\n");
+            printf("%s\n", border);
         }
 
         for (int sub_r = 0; sub_r < 3; sub_r++) {
             for (int c = 0; c < 9; c++) {
                 if (c % 3 == 0) {
                     printf("|");
-                } else {
-                    printf(" ");
                 }
 
                 int val_already_set = game->player_grid[r][c];
 
                 if (val_already_set != 0) {
                     if (sub_r == 1) {
-                        printf("  %s%d%s  ", COLOR_WHITE, val_already_set, COLOR_RESET);
+                        printf("   %s%d%s   ", COLOR_WHITE, val_already_set, COLOR_RESET);
                     } else {
-                        printf("     ");
+                        printf("       ");
                     }
                 } else {
+                    printf(" ");
                     for (int sub_c = 0; sub_c < 3; sub_c++) {
                         int candidate_val = sub_r * 3 + sub_c + 1;
 
-                        if (has_candidate(game, r, c, candidate_val)) {
-                            printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
+                        bool is_active = has_candidate(game, r, c, candidate_val);
+                        bool is_red = is_active && ((game->highlight_red[r][c] & (1 << candidate_val)) != 0);
+                        bool is_green = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
+
+                        if (is_active) {
+                            if (is_red) {
+                                printf("%s%d%s", COLOR_RED, candidate_val, COLOR_RESET);
+                            } else if (is_green) {
+                                printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
+                            } else {
+                                printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
+                            }
                         } else {
                             printf("%s.%s", COLOR_GRAY, COLOR_RESET);
                         }
@@ -268,10 +291,11 @@ void print_candidates_grid(const SudokuGame *game) {
                             printf(" ");
                         }
                     }
+                    printf(" ");
                 }
             }
             printf("|\n");
         }
     }
-    printf("+-----------------+-----------------+-----------------+\n\n");
+    printf("%s\n\n", border);
 }

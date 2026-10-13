@@ -10,6 +10,10 @@ typedef struct {
     char player_grid[9][9];  /* Grille actuelle jouée par l'utilisateur */
     char solution[9][9];     /* Solution complète pour la vérification */
     uint16_t candidates[9][9]; // Contient les masques de bits des candidats
+    /* Masques de surbrillance pour les indices */
+    uint16_t highlight_green[9][9]; // Candidats pivots / sources (Cyan/Vert)
+    uint16_t highlight_red[9][9];   // Candidats à éliminer (Rouge)
+
 } SudokuGame;
 // Strategy functions
 typedef int (*f_ptr_t)(void);
@@ -32,4 +36,8 @@ bool has_candidate(const SudokuGame *game, int r, int c, int val);
 
 // Compte combien de candidats sont encore possibles dans une case
 int count_candidates(const SudokuGame *game, int r, int c);
+
+/* Réinitialise toutes les couleurs de surbrillance */
+void clear_highlights(SudokuGame *game);
+
 #endif /* GAME_H */
