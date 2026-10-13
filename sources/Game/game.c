@@ -17,8 +17,10 @@
 #define COLOR_RESET "\033[0m"
 #define COLOR_GRAY  "\033[90m"
 #define COLOR_WHITE "\033[1;37m"
-#define COLOR_RED   "\033[1;31m"  // Rouge vif pour les éliminations
-#define COLOR_CYAN  "\033[1;36m"  // Cyan/Vert vif pour les candidats pivots
+#define COLOR_RED     "\033[1;31m"  // Rouge (Éliminations)
+#define COLOR_CYAN    "\033[1;36m"  // Cyan (Pivot Y)
+#define COLOR_MAGENTA "\033[1;35m"  // Magenta / Rose (Pivot X)
+#define COLOR_GREEN   "\033[1;32m"  // Vert (Pince Z)
 
 typedef bool (*StrategyFn)(const SudokuGame *);
 
@@ -107,8 +109,10 @@ static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 void clear_highlights(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-            game->highlight_green[r][c] = 0;
             game->highlight_red[r][c] = 0;
+            game->highlight_cyan[r][c] = 0;
+            game->highlight_magenta[r][c] = 0;
+            game->highlight_green[r][c] = 0;
         }
     }
 }
@@ -116,8 +120,13 @@ void clear_highlights(SudokuGame *game) {
 void init_game(SudokuGame *game, int difficulty) {
     clear_highlights(game);
     printf("Chargement d'une grille pour le niveau %d...\n", difficulty);
-
     int target_level = difficulty - 1;
+    // réinitialise le masque d'élimination
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            game->eliminated_mask[r][c] = 0;
+        }
+    }
 
     if (!load_puzzle_from_bank(game, target_level)) {
         printf("Fallback : Génération à la volée...\n");
@@ -242,7 +251,6 @@ void provide_hint(const SudokuGame *game) {
     printf("Aucun indice trouvé avec les stratégies actuelles.\n");
     printf("-------------------------------\n\n");
 }
-
 void print_candidates_grid(const SudokuGame *game) {
     printf("\n==== GRILLE DES CANDIDATS (PENCILMARKS) ====\n");
     const char *border = "+---------------------+---------------------+---------------------+";
@@ -271,15 +279,21 @@ void print_candidates_grid(const SudokuGame *game) {
                     for (int sub_c = 0; sub_c < 3; sub_c++) {
                         int candidate_val = sub_r * 3 + sub_c + 1;
 
-                        bool is_active = has_candidate(game, r, c, candidate_val);
-                        bool is_red = is_active && ((game->highlight_red[r][c] & (1 << candidate_val)) != 0);
-                        bool is_green = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
+                        bool is_active  = has_candidate(game, r, c, candidate_val);
+                        bool is_red     = is_active && ((game->highlight_red[r][c] & (1 << candidate_val)) != 0);
+                        bool is_magenta = is_active && ((game->highlight_magenta[r][c] & (1 << candidate_val)) != 0);
+                        bool is_cyan    = is_active && ((game->highlight_cyan[r][c] & (1 << candidate_val)) != 0);
+                        bool is_green   = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
 
                         if (is_active) {
                             if (is_red) {
                                 printf("%s%d%s", COLOR_RED, candidate_val, COLOR_RESET);
-                            } else if (is_green) {
+                            } else if (is_magenta) {
+                                printf("%s%d%s", COLOR_MAGENTA, candidate_val, COLOR_RESET);
+                            } else if (is_cyan) {
                                 printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
+                            } else if (is_green) {
+                                printf("%s%d%s", COLOR_GREEN, candidate_val, COLOR_RESET);
                             } else {
                                 printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
                             }
@@ -298,4 +312,28 @@ void print_candidates_grid(const SudokuGame *game) {
         }
     }
     printf("%s\n\n", border);
+}
+
+bool apply_current_hint(SudokuGame *game) {
+    bool applied = false;
+
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            if (game->highlight_red[r][c] != 0) {
+                /* Transfère les candidats rouges dans le masque d'élimination permanent */
+                game->eliminated_mask[r][c] |= game->highlight_red[r][c];
+                applied = true;
+            }
+        }
+    }
+
+    if (applied) {
+        clear_highlights(game);
+        compute_autonote(game);
+        printf("✨ Indice appliqué avec succès ! Les candidats rouges ont été éliminés.\n");
+    } else {
+        printf("⚠️ Aucun indice avec élimination à appliquer pour le moment.\n");
+    }
+
+    return applied;
 }

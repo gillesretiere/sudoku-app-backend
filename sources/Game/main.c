@@ -56,6 +56,13 @@ int main(void) {
             continue;
         }        
 
+        /* Commande Apply Hint : Retire les candidats éliminés de la grille des candidats */
+        if (input[0] == 'a' || input[0] == 'A') {
+            if (apply_current_hint(&game)) {
+                print_candidates_grid(&game);
+            }
+        }
+
         /* Lecture des 3 entiers pour un coup classique */
         if (sscanf(input, "%d %d %d", &row, &col, &val) == 3) {
             make_move(&game, row - 1, col - 1, val);

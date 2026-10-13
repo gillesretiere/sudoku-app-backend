@@ -23,18 +23,18 @@ static bool is_valid_placement(const SudokuGame *game, int r, int c, int val) {
 void compute_autonote(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-            // Réinitialise le masque de la case
             game->candidates[r][c] = 0;
 
-            // Si la case est déjà remplie, elle n'a aucun candidat
             if (game->player_grid[r][c] != 0) {
                 continue;
             }
 
-            // Teste chaque chiffre de 1 à 9 et active le bit correspondant
             for (int val = 1; val <= 9; val++) {
                 if (is_valid_placement(game, r, c, val)) {
-                    game->candidates[r][c] |= (1 << val); // Active le bit 'val'
+                    /* On active le candidat seulement s'il n'a pas été éliminé par un indice */
+                    if ((game->eliminated_mask[r][c] & (1 << val)) == 0) {
+                        game->candidates[r][c] |= (1 << val);
+                    }
                 }
             }
         }
