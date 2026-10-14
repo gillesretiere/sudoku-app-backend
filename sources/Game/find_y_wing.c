@@ -3,6 +3,14 @@
 #include "find_y_wing.h"
 #include "candidates.h"
 
+// Définitions des couleurs ANSI pour l'affichage de l'indice
+#ifndef COLOR_RESET
+#define COLOR_RESET   "\033[0m"
+#define COLOR_RED     "\033[1;31m"
+#define COLOR_CYAN    "\033[1;36m"
+#define COLOR_MAGENTA "\033[1;38;2;190;70;255m"
+#endif
+
 /* Vérifie si deux cases partagent une ligne, une colonne ou un bloc 3x3 */
 static bool can_see(int r1, int c1, int r2, int c2) {
     if (r1 == r2 && c1 == c2) return false;
@@ -95,7 +103,7 @@ bool find_y_wing(const SudokuGame *game) {
                                 } else {
                                     mutable_game->highlight_magenta[r1][c1] |= (1 << py);
                                 }
-                                mutable_game->highlight_green[r1][c1] |= (1 << z); /* Candidate z en Vert */
+                                mutable_game->highlight_green[r1][c1] |= (1 << z); /* Candidat z en Vert */
 
                                 /* 3. Coloration de la Pince 2 */
                                 if (p2_shared == px) {
@@ -103,7 +111,7 @@ bool find_y_wing(const SudokuGame *game) {
                                 } else {
                                     mutable_game->highlight_magenta[r2][c2] |= (1 << py);
                                 }
-                                mutable_game->highlight_green[r2][c2] |= (1 << z); /* Candidate z en Vert */
+                                mutable_game->highlight_green[r2][c2] |= (1 << z); /* Candidat z en Vert */
 
                                 /* 4. Coloration en Rouge des candidats z éliminés */
                                 for (int er = 0; er < 9; er++) {
@@ -125,9 +133,9 @@ bool find_y_wing(const SudokuGame *game) {
                                 printf("   Le candidat %d est donc obligatoirement présent dans l'une des deux pinces.\n\n", z);
 
                                 printf("🎯 APPLICATION :\n");
-                                printf("   Case Pivot : (%d, %d) [Candidats : \033[1;36m%d\033[0m, \033[1;35m%d\033[0m]\n", pr + 1, pc + 1, px, py);
+                                printf("   Case Pivot : (%d, %d) [Candidats : " COLOR_CYAN "%d" COLOR_RESET ", " COLOR_MAGENTA "%d" COLOR_RESET "]\n", pr + 1, pc + 1, px, py);
                                 printf("   Pince 1 : (%d, %d) | Pince 2 : (%d, %d)\n", r1 + 1, c1 + 1, r2 + 1, c2 + 1);
-                                printf("   👉 Action : Élimination du \033[1;31mcandidat %d\033[0m dans les cases communes aux deux pinces.\n", z);
+                                printf("   👉 Action : Élimination du " COLOR_RED "candidat %d" COLOR_RESET " dans les cases communes aux deux pinces.\n", z);
                                 return true;
                             }
                         }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "find_naked_single.h"
+#include "candidates.h"
 
 static bool is_valid(const SudokuGame *game, int r, int c, int val) {
     for (int i = 0; i < 9; i++) {
@@ -22,6 +23,8 @@ static bool is_valid(const SudokuGame *game, int r, int c, int val) {
 }
 
 bool find_naked_single(const SudokuGame *game) {
+    SudokuGame *mutable_game = (SudokuGame *)game;
+
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (game->player_grid[r][c] == 0) {
@@ -36,13 +39,15 @@ bool find_naked_single(const SudokuGame *game) {
                 }
 
                 if (count == 1) {
-                    /* --- EXPLICATION THÉORIQUE --- */
+                    clear_highlights(mutable_game);
+                    /* Marquer le chiffre unique en vert */
+                    mutable_game->highlight_green[r][c] |= (1 << candidate);
+
                     printf("📖 THÉORIE — Candidat Unique (Naked Single) :\n");
                     printf("   Lorsqu'une case vide ne peut recevoir qu'un seul chiffre possible\n");
                     printf("   (parce que les 8 autres figurent déjà sur la ligne, la colonne ou le bloc),\n");
                     printf("   ce chiffre est obligatoirement la solution de cette case.\n\n");
 
-                    /* --- APPLICATION À LA GRILLE --- */
                     printf("🎯 APPLICATION :\n");
                     printf("   En analysant la case (%d, %d), tous les chiffres de 1 à 9 sont éliminés\n", r + 1, c + 1);
                     printf("   par sa ligne, sa colonne ou son bloc 3x3, SAUF le chiffre %d.\n", candidate);

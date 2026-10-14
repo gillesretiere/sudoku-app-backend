@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "find_hidden_single.h"
+#include "candidates.h"
 
-// Helper : vérifie si un chiffre 'val' peut être placé en position (r, c)
 static bool is_valid(const SudokuGame *game, int r, int c, int val) {
     for (int i = 0; i < 9; i++) {
         if (game->player_grid[r][i] == val || game->player_grid[i][c] == val) {
@@ -22,7 +22,6 @@ static bool is_valid(const SudokuGame *game, int r, int c, int val) {
     return true;
 }
 
-// Affiche l'explication théorique du Chiffre Caché
 static void print_theory(void) {
     printf("📖 THÉORIE — Chiffre Caché (Hidden Single) :\n");
     printf("   Même si une case possède plusieurs candidats possibles, si un chiffre donné\n");
@@ -31,6 +30,8 @@ static void print_theory(void) {
 }
 
 bool find_hidden_single(const SudokuGame *game) {
+    SudokuGame *mutable_game = (SudokuGame *)game;
+
     // 1. Recherche par Lignes
     for (int r = 0; r < 9; r++) {
         for (int val = 1; val <= 9; val++) {
@@ -45,12 +46,13 @@ bool find_hidden_single(const SudokuGame *game) {
             }
 
             if (count == 1) {
+                clear_highlights(mutable_game);
+                mutable_game->highlight_green[r][target_c] |= (1 << val);
+
                 print_theory();
                 printf("🎯 APPLICATION :\n");
-                printf("   Sur la ligne %d, le chiffre %d ne peut aller qu'en colonne %d.\n", 
-                       r + 1, val, target_c + 1);
-                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", 
-                       val, r + 1, target_c + 1);
+                printf("   Sur la ligne %d, le chiffre %d ne peut aller qu'en colonne %d.\n", r + 1, val, target_c + 1);
+                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", val, r + 1, target_c + 1);
                 return true;
             }
         }
@@ -70,12 +72,13 @@ bool find_hidden_single(const SudokuGame *game) {
             }
 
             if (count == 1) {
+                clear_highlights(mutable_game);
+                mutable_game->highlight_green[target_r][c] |= (1 << val);
+
                 print_theory();
                 printf("🎯 APPLICATION :\n");
-                printf("   Dans la colonne %d, le chiffre %d ne peut aller qu'en ligne %d.\n", 
-                       c + 1, val, target_r + 1);
-                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", 
-                       val, target_r + 1, c + 1);
+                printf("   Dans la colonne %d, le chiffre %d ne peut aller qu'en ligne %d.\n", c + 1, val, target_r + 1);
+                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", val, target_r + 1, c + 1);
                 return true;
             }
         }
@@ -105,12 +108,13 @@ bool find_hidden_single(const SudokuGame *game) {
             }
 
             if (count == 1) {
+                clear_highlights(mutable_game);
+                mutable_game->highlight_green[target_r][target_c] |= (1 << val);
+
                 print_theory();
                 printf("🎯 APPLICATION :\n");
-                printf("   Dans le bloc 3x3 n°%d, le chiffre %d ne peut être placé qu'en case (%d, %d).\n", 
-                       box + 1, val, target_r + 1, target_c + 1);
-                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", 
-                       val, target_r + 1, target_c + 1);
+                printf("   Dans le bloc 3x3 n°%d, le chiffre %d ne peut être placé qu'en case (%d, %d).\n", box + 1, val, target_r + 1, target_c + 1);
+                printf("   👉 Placement recommandé : la valeur %d en case (%d, %d).\n", val, target_r + 1, target_c + 1);
                 return true;
             }
         }

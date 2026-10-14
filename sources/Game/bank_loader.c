@@ -8,67 +8,68 @@
 #define MAX_BANK_ENTRIES 500
 #define LINE_BUF_SIZE 256
 
+typedef struct {
+    char puzzle[82];
+    char solution[82];
+    int level;
+    int clues;
+} BankEntry;
+
 bool load_puzzle_from_bank(SudokuGame *game, int target_level) {
     FILE *file = fopen("puzzles_bank.txt", "r");
     if (!file) {
-        printf("❌ Erreur : Impossible d'ouvrir le fichier puzzles_bank.txt.\n");
+        file = fopen("../puzzles_bank.txt", "r");
+    }
+
+    if (!file) {
+        printf("⚠️ Impossible d'ouvrir puzzles_bank.txt.\n");
         return false;
     }
 
-    char matching_lines[MAX_BANK_ENTRIES][LINE_BUF_SIZE];
-    int matching_count = 0;
-    char buffer[LINE_BUF_SIZE];
+    BankEntry matching_puzzles[100];
+    int count = 0;
 
-    /* 1. Filtration des grilles correspondant au niveau demandé */
-    while (fgets(buffer, sizeof(buffer), file) && matching_count < MAX_BANK_ENTRIES) {
-        int level = -1;
-        if (sscanf(buffer, "%d;", &level) == 1 && level == target_level) {
-            strncpy(matching_lines[matching_count], buffer, LINE_BUF_SIZE - 1);
-            matching_lines[matching_count][LINE_BUF_SIZE - 1] = '\0';
-            matching_count++;
+    char line[LINE_BUF_SIZE];
+    while (fgets(line, sizeof(line), file)) {
+        int level, clues;
+        char puzzle[82], solution[82];
+
+        /* Format : niveau;nb_indices;grille_puzzle;grille_solution */
+        if (sscanf(line, "%d;%d;%81s;%81s", &level, &clues, puzzle, solution) == 4) {
+            if (level == target_level && count < 100) {
+                matching_puzzles[count].level = level;
+                matching_puzzles[count].clues = clues;
+                strncpy(matching_puzzles[count].puzzle, puzzle, 82);
+                strncpy(matching_puzzles[count].solution, solution, 82);
+                count++;
+            }
         }
     }
     fclose(file);
 
-    if (matching_count == 0) {
-        printf("⚠️ Aucune grille de niveau %d trouvée dans la banque.\n", target_level);
+    if (count == 0) {
+        printf("⚠️ Aucune grille trouvée pour le niveau %d dans la banque.\n", target_level);
         return false;
     }
 
-    /* 2. Sélection aléatoire d'une grille */
-    int selected_idx = rand() % matching_count;
-    char *selected_line = matching_lines[selected_idx];
+    /* Tirage aléatoire parmi les grilles correspondantes */
+    int random_idx = rand() % count;
+    BankEntry selected = matching_puzzles[random_idx];
 
-    int level, clue_count;
-    char puzzle_str[82];
-    char solution_str[82];
-
-    if (sscanf(selected_line, "%d;%d;%81s;%81s", &level, &clue_count, puzzle_str, solution_str) != 4) {
-        printf("❌ Erreur de format dans la ligne de banque sélectionnée.\n");
-        return false;
-    }
-
-    /* 3. Conversion des chaînes de 81 caractères en tableaux 2D 9x9 */
+    /* Chargement dans le moteur de jeu */
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-            int idx = r * 9 + c;
-            game->initial_grid[r][c] = puzzle_str[idx] - '0';
-            game->solution[r][c] = solution_str[idx] - '0';
-            game->player_grid[r][c] = game->initial_grid[r][c];
+            char p_char = selected.puzzle[r * 9 + c];
+            char s_char = selected.solution[r * 9 + c];
+
+            int p_val = (p_char >= '1' && p_char <= '9') ? (p_char - '0') : 0;
+            int s_val = (s_char >= '1' && s_char <= '9') ? (s_char - '0') : 0;
+
+            game->initial_grid[r][c] = (char)p_val;
+            game->player_grid[r][c] = (char)p_val;
+            game->solution[r][c] = (char)s_val;
         }
     }
 
-    /* 4. Application des transformations isométriques (variations infinies) */
-    transform_grid(game->initial_grid, game->solution);
-
-    /* Copie de la grille transformée dans le plateau du joueur */
-    for (int r = 0; r < 9; r++) {
-        for (int c = 0; c < 9; c++) {
-            game->player_grid[r][c] = game->initial_grid[r][c];
-        }
-    }
-
-    compute_autonote(game);
-    printf("Grille [Niveau %d] chargée et transformée avec succès (%d indices d'origine).\n", target_level, clue_count);
     return true;
 }

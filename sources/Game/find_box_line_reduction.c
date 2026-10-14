@@ -7,32 +7,33 @@ bool find_box_line_reduction(const SudokuGame *game) {
     SudokuGame temp = *game;
     compute_autonote(&temp);
 
-    // 1. Analyse des lignes
-    for (int r = 0; r < 9; r++) {
-        for (int val = 1; val <= 9; val++) {
-            int same_box = -1;
-            bool is_same_box = true;
-            int count = 0;
+    SudokuGame *mutable_game = (SudokuGame *)game;
+
+    for (int val = 1; val <= 9; val++) {
+        // 1. Recherche par Lignes
+        for (int r = 0; r < 9; r++) {
+            int target_b = -1;
+            int count_in_row = 0;
+            bool same_box = true;
 
             for (int c = 0; c < 9; c++) {
                 if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
-                    count++;
+                    count_in_row++;
                     int b = (r / 3) * 3 + (c / 3);
-                    if (same_box == -1) same_box = b;
-                    else if (same_box != b) is_same_box = false;
+                    if (target_b == -1) target_b = b;
+                    else if (target_b != b) same_box = false;
                 }
             }
 
-            if (count >= 2 && count <= 3 && is_same_box && same_box != -1) {
+            if (count_in_row >= 2 && same_box && target_b != -1) {
                 bool can_eliminate = false;
-                int start_r = (same_box / 3) * 3;
-                int start_c = (same_box % 3) * 3;
+                int start_r = (target_b / 3) * 3;
+                int start_c = (target_b % 3) * 3;
 
                 for (int br = 0; br < 3; br++) {
                     for (int bc = 0; bc < 3; bc++) {
                         int curr_r = start_r + br;
                         int curr_c = start_c + bc;
-
                         if (curr_r != r && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
                             can_eliminate = true;
                             break;
@@ -41,46 +42,63 @@ bool find_box_line_reduction(const SudokuGame *game) {
                 }
 
                 if (can_eliminate) {
+                    clear_highlights(mutable_game);
+
+                    // Candidats sources en VERT sur la ligne
+                    for (int c = 0; c < 9; c++) {
+                        if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                            mutable_game->highlight_green[r][c] |= (1 << val);
+                        }
+                    }
+
+                    // Candidats à éliminer en ROUGE dans le reste du bloc
+                    for (int br = 0; br < 3; br++) {
+                        for (int bc = 0; bc < 3; bc++) {
+                            int curr_r = start_r + br;
+                            int curr_c = start_c + bc;
+                            if (curr_r != r && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                                mutable_game->highlight_red[curr_r][curr_c] |= (1 << val);
+                            }
+                        }
+                    }
+
                     printf("📖 THÉORIE — Réduction Bloc-Ligne (Box-Line Reduction) :\n");
-                    printf("   Lorsqu'un candidat sur une ligne n'apparaît que dans un seul bloc 3x3,\n");
-                    printf("   ce chiffre doit obligatoirement appartenir à cette ligne dans ce bloc.\n");
-                    printf("   Il peut donc être éliminé des autres cases de ce bloc 3x3.\n\n");
+                    printf("   Lorsque toutes les occurrences d'un candidat sur une ligne sont confinées dans un seul bloc 3x3,\n");
+                    printf("   ce chiffre doit nécessairement être placé dans ce bloc sur cette ligne.\n");
+                    printf("   Il peut donc être éliminé des autres cases du bloc.\n\n");
 
                     printf("🎯 APPLICATION :\n");
-                    printf("   Sur la ligne %d, le chiffre %d est entièrement confiné au bloc %d.\n", r + 1, val, same_box + 1);
-                    printf("   👉 Action : Vous pouvez éliminer le candidat %d des autres cases du bloc %d.\n", val, same_box + 1);
+                    printf("   Sur la ligne %d, le chiffre %d n'apparaît que dans le bloc %d.\n", r + 1, val, target_b + 1);
+                    printf("   👉 Action : Élimination du candidat %d des autres cases du bloc %d.\n", val, target_b + 1);
                     return true;
                 }
             }
         }
-    }
 
-    // 2. Analyse des colonnes
-    for (int c = 0; c < 9; c++) {
-        for (int val = 1; val <= 9; val++) {
-            int same_box = -1;
-            bool is_same_box = true;
-            int count = 0;
+        // 2. Recherche par Colonnes
+        for (int c = 0; c < 9; c++) {
+            int target_b = -1;
+            int count_in_col = 0;
+            bool same_box = true;
 
             for (int r = 0; r < 9; r++) {
                 if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
-                    count++;
+                    count_in_col++;
                     int b = (r / 3) * 3 + (c / 3);
-                    if (same_box == -1) same_box = b;
-                    else if (same_box != b) is_same_box = false;
+                    if (target_b == -1) target_b = b;
+                    else if (target_b != b) same_box = false;
                 }
             }
 
-            if (count >= 2 && count <= 3 && is_same_box && same_box != -1) {
+            if (count_in_col >= 2 && same_box && target_b != -1) {
                 bool can_eliminate = false;
-                int start_r = (same_box / 3) * 3;
-                int start_c = (same_box % 3) * 3;
+                int start_r = (target_b / 3) * 3;
+                int start_c = (target_b % 3) * 3;
 
                 for (int br = 0; br < 3; br++) {
                     for (int bc = 0; bc < 3; bc++) {
                         int curr_r = start_r + br;
                         int curr_c = start_c + bc;
-
                         if (curr_c != c && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
                             can_eliminate = true;
                             break;
@@ -89,14 +107,34 @@ bool find_box_line_reduction(const SudokuGame *game) {
                 }
 
                 if (can_eliminate) {
+                    clear_highlights(mutable_game);
+
+                    // Candidats sources en VERT sur la colonne
+                    for (int r = 0; r < 9; r++) {
+                        if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                            mutable_game->highlight_green[r][c] |= (1 << val);
+                        }
+                    }
+
+                    // Candidats à éliminer en ROUGE dans le reste du bloc
+                    for (int br = 0; br < 3; br++) {
+                        for (int bc = 0; bc < 3; bc++) {
+                            int curr_r = start_r + br;
+                            int curr_c = start_c + bc;
+                            if (curr_c != c && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                                mutable_game->highlight_red[curr_r][curr_c] |= (1 << val);
+                            }
+                        }
+                    }
+
                     printf("📖 THÉORIE — Réduction Bloc-Ligne (Box-Line Reduction) :\n");
-                    printf("   Lorsqu'un candidat sur une colonne n'apparaît que dans un seul bloc 3x3,\n");
-                    printf("   ce chiffre doit obligatoirement appartenir à cette colonne dans ce bloc.\n");
-                    printf("   Il peut donc être éliminé des autres cases de ce bloc 3x3.\n\n");
+                    printf("   Lorsque toutes les occurrences d'un candidat sur une colonne sont confinées dans un seul bloc 3x3,\n");
+                    printf("   ce chiffre doit nécessairement être placé dans ce bloc sur cette colonne.\n");
+                    printf("   Il peut donc être éliminé des autres cases du bloc.\n\n");
 
                     printf("🎯 APPLICATION :\n");
-                    printf("   Dans la colonne %d, le chiffre %d est entièrement confiné au bloc %d.\n", c + 1, val, same_box + 1);
-                    printf("   👉 Action : Vous pouvez éliminer le candidat %d des autres cases du bloc %d.\n", val, same_box + 1);
+                    printf("   Dans la colonne %d, le chiffre %d n'apparaît que dans le bloc %d.\n", c + 1, val, target_b + 1);
+                    printf("   👉 Action : Élimination du candidat %d des autres cases du bloc %d.\n", val, target_b + 1);
                     return true;
                 }
             }

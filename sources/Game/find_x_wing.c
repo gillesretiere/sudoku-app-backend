@@ -7,6 +7,8 @@ bool find_x_wing(const SudokuGame *game) {
     SudokuGame temp = *game;
     compute_autonote(&temp);
 
+    SudokuGame *mutable_game = (SudokuGame *)game;
+
     // 1. X-Wing basé sur les LIGNES (Éliminations sur les COLONNES)
     for (int val = 1; val <= 9; val++) {
         for (int r1 = 0; r1 < 8; r1++) {
@@ -19,7 +21,7 @@ bool find_x_wing(const SudokuGame *game) {
                 }
             }
 
-            if (count_r1 != 2) continue; // Le candidat doit apparaître exactement 2 fois sur la ligne r1
+            if (count_r1 != 2) continue; // Exactement 2 occurrences sur r1
 
             for (int r2 = r1 + 1; r2 < 9; r2++) {
                 int cols_r2[9];
@@ -31,14 +33,13 @@ bool find_x_wing(const SudokuGame *game) {
                     }
                 }
 
-                if (count_r2 != 2) continue; // Doit aussi apparaître exactement 2 fois sur r2
+                if (count_r2 != 2) continue; // Exactement 2 occurrences sur r2
 
-                // Alignement parfait sur les deux mêmes colonnes
+                // Alignement sur les deux mêmes colonnes
                 if (cols_r1[0] == cols_r2[0] && cols_r1[1] == cols_r2[1]) {
                     int c1 = cols_r1[0];
                     int c2 = cols_r1[1];
 
-                    // Vérification : existe-t-il au moins un candidat à éliminer dans c1 ou c2 ?
                     bool can_eliminate = false;
                     for (int r = 0; r < 9; r++) {
                         if (r == r1 || r == r2) continue;
@@ -47,6 +48,25 @@ bool find_x_wing(const SudokuGame *game) {
                     }
 
                     if (can_eliminate) {
+                        clear_highlights(mutable_game);
+
+                        // 1. Les 4 sommets du X-Wing en VERT
+                        mutable_game->highlight_green[r1][c1] |= (1 << val);
+                        mutable_game->highlight_green[r1][c2] |= (1 << val);
+                        mutable_game->highlight_green[r2][c1] |= (1 << val);
+                        mutable_game->highlight_green[r2][c2] |= (1 << val);
+
+                        // 2. Éliminations en ROUGE sur les colonnes c1 et c2
+                        for (int r = 0; r < 9; r++) {
+                            if (r == r1 || r == r2) continue;
+                            if (temp.player_grid[r][c1] == 0 && has_candidate(&temp, r, c1, val)) {
+                                mutable_game->highlight_red[r][c1] |= (1 << val);
+                            }
+                            if (temp.player_grid[r][c2] == 0 && has_candidate(&temp, r, c2, val)) {
+                                mutable_game->highlight_red[r][c2] |= (1 << val);
+                            }
+                        }
+
                         printf("📖 THÉORIE — X-Wing (par Lignes) :\n");
                         printf("   Le candidat %d n'apparaît que dans deux cases de la ligne %d (col. %d et %d)\n", val, r1 + 1, c1 + 1, c2 + 1);
                         printf("   et dans deux cases de la ligne %d, exactement alignées sur les MÊMES colonnes.\n", r2 + 1);
@@ -99,6 +119,25 @@ bool find_x_wing(const SudokuGame *game) {
                     }
 
                     if (can_eliminate) {
+                        clear_highlights(mutable_game);
+
+                        // 1. Les 4 sommets du X-Wing en VERT
+                        mutable_game->highlight_green[r1][c1] |= (1 << val);
+                        mutable_game->highlight_green[r1][c2] |= (1 << val);
+                        mutable_game->highlight_green[r2][c1] |= (1 << val);
+                        mutable_game->highlight_green[r2][c2] |= (1 << val);
+
+                        // 2. Éliminations en ROUGE sur les lignes r1 et r2
+                        for (int c = 0; c < 9; c++) {
+                            if (c == c1 || c == c2) continue;
+                            if (temp.player_grid[r1][c] == 0 && has_candidate(&temp, r1, c, val)) {
+                                mutable_game->highlight_red[r1][c] |= (1 << val);
+                            }
+                            if (temp.player_grid[r2][c] == 0 && has_candidate(&temp, r2, c, val)) {
+                                mutable_game->highlight_red[r2][c] |= (1 << val);
+                            }
+                        }
+
                         printf("📖 THÉORIE — X-Wing (par Colonnes) :\n");
                         printf("   Le candidat %d n'apparaît que dans deux cases de la colonne %d (lignes %d et %d)\n", val, c1 + 1, r1 + 1, r2 + 1);
                         printf("   et dans deux cases de la colonne %d, alignées sur les MÊMES lignes.\n", c2 + 1);

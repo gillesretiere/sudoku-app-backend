@@ -19,7 +19,9 @@
 #define COLOR_WHITE "\033[1;37m"
 #define COLOR_RED     "\033[1;31m"  // Rouge (Éliminations)
 #define COLOR_CYAN    "\033[1;36m"  // Cyan (Pivot Y)
-#define COLOR_MAGENTA "\033[1;35m"  // Magenta / Rose (Pivot X)
+// #define COLOR_MAGENTA "\033[1;35m"  // Magenta / Rose (Pivot X)
+// Un violet/magenta plus doux et très lisible sur fond noir
+#define COLOR_MAGENTA "\033[1;38;2;190;70;255m" 
 #define COLOR_GREEN   "\033[1;32m"  // Vert (Pince Z)
 
 typedef bool (*StrategyFn)(const SudokuGame *);
@@ -251,6 +253,7 @@ void provide_hint(const SudokuGame *game) {
     printf("Aucun indice trouvé avec les stratégies actuelles.\n");
     printf("-------------------------------\n\n");
 }
+
 void print_candidates_grid(const SudokuGame *game) {
     printf("\n==== GRILLE DES CANDIDATS (PENCILMARKS) ====\n");
     const char *border = "+---------------------+---------------------+---------------------+";
@@ -281,19 +284,20 @@ void print_candidates_grid(const SudokuGame *game) {
 
                         bool is_active  = has_candidate(game, r, c, candidate_val);
                         bool is_red     = is_active && ((game->highlight_red[r][c] & (1 << candidate_val)) != 0);
-                        bool is_green   = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
                         bool is_cyan    = is_active && ((game->highlight_cyan[r][c] & (1 << candidate_val)) != 0);
                         bool is_magenta = is_active && ((game->highlight_magenta[r][c] & (1 << candidate_val)) != 0);
+                        bool is_green   = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
 
                         if (is_active) {
-                            if (is_red) {
-                                printf("%s%d%s", COLOR_RED, candidate_val, COLOR_RESET);
-                            } else if (is_green) {
-                                printf("%s%d%s", COLOR_GREEN, candidate_val, COLOR_RESET);
-                            } else if (is_cyan) {
+                            /* Priorité aux couleurs structurelles du pivot et des pinces */
+                            if (is_cyan) {
                                 printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
                             } else if (is_magenta) {
                                 printf("%s%d%s", COLOR_MAGENTA, candidate_val, COLOR_RESET);
+                            } else if (is_green) {
+                                printf("%s%d%s", COLOR_GREEN, candidate_val, COLOR_RESET);
+                            } else if (is_red) {
+                                printf("%s%d%s", COLOR_RED, candidate_val, COLOR_RESET);
                             } else {
                                 printf("%s%d%s", COLOR_GRAY, candidate_val, COLOR_RESET);
                             }
@@ -305,7 +309,7 @@ void print_candidates_grid(const SudokuGame *game) {
                             printf(" ");
                         }
                     }
-                    printf(" ");    
+                    printf(" ");
                 }
             }
             printf("|\n");
@@ -315,25 +319,40 @@ void print_candidates_grid(const SudokuGame *game) {
 }
 
 bool apply_current_hint(SudokuGame *game) {
-    bool applied = false;
+    bool has_red = false;
 
+    /* 1. Vérifie s'il y a des éliminations rouges à appliquer */
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (game->highlight_red[r][c] != 0) {
-                /* Transfère les candidats rouges dans le masque d'élimination permanent */
                 game->eliminated_mask[r][c] |= game->highlight_red[r][c];
-                applied = true;
+                has_red = true;
             }
         }
     }
 
-    if (applied) {
+    if (has_red) {
         clear_highlights(game);
         compute_autonote(game);
         printf("✨ Indice appliqué avec succès ! Les candidats rouges ont été éliminés.\n");
-    } else {
-        printf("⚠️ Aucun indice avec élimination à appliquer pour le moment.\n");
+        return true;
     }
 
-    return applied;
+    /* 2. Si aucune élimination rouge, vérifie s'il y a un placement vert (Naked/Hidden Single) */
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            if (game->highlight_green[r][c] != 0 && game->highlight_cyan[r][c] == 0 && game->highlight_magenta[r][c] == 0) {
+                for (int val = 1; val <= 9; val++) {
+                    if ((game->highlight_green[r][c] & (1 << val)) != 0) {
+                        clear_highlights(game);
+                        printf("✨ Indice appliqué : Placement du chiffre %d en case (%d, %d).\n", val, r + 1, c + 1);
+                        return make_move(game, r, c, val);
+                    }
+                }
+            }
+        }
+    }
+
+    printf("⚠️ Aucun indice à appliquer pour le moment.\n");
+    return false;
 }
