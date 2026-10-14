@@ -58,7 +58,9 @@ int main(void) {
     int row, col, val;
 
     while (!check_victory(&game)) {
-        print_game_board(&game);
+        //print_game_board(&game);
+        print_candidates_grid(&game);
+
         printf("Saisir (Ligne Colonne Valeur), 'n' pour AutoNote, 'h' pour Indice, 'q' pour Quitter : ");
 
         if (fgets(input, sizeof(input), stdin) == NULL) continue;
