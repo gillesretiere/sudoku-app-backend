@@ -1,0 +1,4 @@
+/usr/bin/ld: sources/Game/game.o: in function `init_game':
+game.c:(.text+0x1b9): undefined reference to `generate_sudoku'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:42: sudoku_gui] Error 1
