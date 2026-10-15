@@ -12,7 +12,8 @@ sources/Game/inspect_bank
 
 # Exécutable final
 sudoku_gui
-
+# Logs
+error.txt
 # Fichiers temporaires de sauvegarde
 *.swp
 *~
