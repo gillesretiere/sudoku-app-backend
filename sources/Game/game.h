@@ -3,6 +3,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+
+/* En mode GUI, la macro GUI_MODE neutralise uniquement les printf de la version graphique */
+#ifdef GUI_MODE
+    #define printf(...) ((void)0)
+#endif
 
 typedef struct {
     char initial_grid[9][9];
@@ -18,6 +24,9 @@ typedef struct {
 
     /* Masque mémoire des candidats éliminés par les indices */
     uint16_t eliminated_mask[9][9];
+    /* Tampon mémoire pour transmettre la description de l'indice à la GUI (inactif en CLI) */
+    char hint_description[512];
+    
 } SudokuGame;
 
 void init_game(SudokuGame *game, int difficulty);

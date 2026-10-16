@@ -15,15 +15,28 @@ typedef struct {
     int clues;
 } BankEntry;
 
-bool load_puzzle_from_bank(SudokuGame *game, int target_level) {
+// Fonction utilitaire pour trouver et ouvrir le fichier de la banque de grilles
+static FILE* open_puzzle_bank_file(void) {
+    // 1. Essai depuis le dossier courant (ex: si on est dans sources/Game/)
     FILE *file = fopen("puzzles_bank.txt", "r");
-    if (!file) {
-        file = fopen("../puzzles_bank.txt", "r");
-    }
+    if (file) return file;
 
+    // 2. Essai depuis la racine du projet (ex: quand on lance ./sources/Game/sudoku_game)
+    file = fopen("sources/Game/puzzles_bank.txt", "r");
+    if (file) return file;
+
+    // 3. Essai depuis un sous-dossier parent si nécessaire
+    file = fopen("../sources/Game/puzzles_bank.txt", "r");
+    if (file) return file;
+
+    return NULL; // Aucun fichier trouvé
+}
+
+bool load_puzzle_from_bank(SudokuGame *game, int target_level) {
+    FILE *file = open_puzzle_bank_file();
     if (!file) {
         printf("⚠️ Impossible d'ouvrir puzzles_bank.txt.\n");
-        return false;
+        return false; // Utilisation de la génération par défaut en cas d'échec
     }
 
     BankEntry matching_puzzles[100];

@@ -108,6 +108,7 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
+// Réinitialise les masques de surbrillation et le message d'explication
 void clear_highlights(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
@@ -117,6 +118,7 @@ void clear_highlights(SudokuGame *game) {
             game->highlight_green[r][c] = 0;
         }
     }
+    game->hint_description[0] = '\0';
 }
 
 void init_game(SudokuGame *game, int difficulty) {
@@ -233,6 +235,7 @@ bool check_victory(const SudokuGame *game) {
     return true;
 }
 
+// Recherche la première stratégie applicable et génère l'indice
 void provide_hint(const SudokuGame *game) {
     clear_highlights((SudokuGame *)game);
     printf("\n--- RECHERCHE D'UN INDICE ---\n");
@@ -242,13 +245,25 @@ void provide_hint(const SudokuGame *game) {
 
         for (int i = 0; i < lvl->count; i++) {
             if (lvl->strategies[i](game)) {
+                // Affichage console pour la version CLI
                 printf("[Difficulté : %s | Stratégie : %s]\n", 
                        lvl->level_name, lvl->strategy_names[i]);
                 printf("-------------------------------\n\n");
+
+                // Alimentation du tampon mémoire pour l'interface GUI
+                snprintf(((SudokuGame *)game)->hint_description, 
+                         sizeof(game->hint_description),
+                         "[%s]\n%s", 
+                         lvl->level_name, lvl->strategy_names[i]);
                 return;
             }
         }
     }
+
+    // Si aucune stratégie ne trouve d'indice
+    snprintf(((SudokuGame *)game)->hint_description, 
+             sizeof(game->hint_description),
+             "Aucun indice trouvé avec les stratégies actuelles.");
 
     printf("Aucun indice trouvé avec les stratégies actuelles.\n");
     printf("-------------------------------\n\n");

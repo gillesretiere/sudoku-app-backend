@@ -40,3 +40,12 @@ gcc -Wall -Wextra -std=c11 -DGAME_MODE inspect_bank.c game.c candidates.c solver
 ```
 gcc -Wall -Wextra -std=c11 -DGAME_MODE generate_bank.c game.c candidates.c solver_eval.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o build_bank
 ```
+## Notes concernant les compilations séparéés CLI et GUI
+### CLI
+Penser à ajouter ce code en début de chaque fichier .h et .c
+```
+/* En mode GUI, la macro GUI_MODE neutralise uniquement les printf de la version graphique */
+#ifdef GUI_MODE
+    #define printf(...) ((void)0)
+#endif
+```
