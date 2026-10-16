@@ -49,3 +49,7 @@ Penser à ajouter ce code en début de chaque fichier .h et .c
     #define printf(...) ((void)0)
 #endif
 ```
+#### Compilation des deux versions
+```
+make clean && make
+```
