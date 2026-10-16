@@ -40,9 +40,19 @@ bool find_naked_single(const SudokuGame *game) {
 
                 if (count == 1) {
                     clear_highlights(mutable_game);
-                    /* Marquer le chiffre unique en vert */
                     mutable_game->highlight_green[r][c] |= (1 << candidate);
 
+                    /* Format synthétique et lisible pour l'interface graphique */
+                    snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                             "THEORIE - Candidat Unique :\n"
+                             "Lorsqu'une case vide ne peut recevoir qu'un seul chiffre, "
+                             "celui-ci est sa solution obligée.\n\n"
+                             "APPLICATION :\n"
+                             "En case (%d, %d), tous les chiffres sont elimines sauf le %d.\n"
+                             "-> Placer le %d en (%d, %d).",
+                             r + 1, c + 1, candidate, candidate, r + 1, c + 1);
+
+                    /* Format complet inchangé pour le terminal (CLI) */
                     printf("📖 THÉORIE — Candidat Unique (Naked Single) :\n");
                     printf("   Lorsqu'une case vide ne peut recevoir qu'un seul chiffre possible\n");
                     printf("   (parce que les 8 autres figurent déjà sur la ligne, la colonne ou le bloc),\n");

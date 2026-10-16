@@ -245,22 +245,22 @@ void provide_hint(const SudokuGame *game) {
 
         for (int i = 0; i < lvl->count; i++) {
             if (lvl->strategies[i](game)) {
-                // Affichage console pour la version CLI
                 printf("[Difficulté : %s | Stratégie : %s]\n", 
                        lvl->level_name, lvl->strategy_names[i]);
                 printf("-------------------------------\n\n");
 
-                // Alimentation du tampon mémoire pour l'interface GUI
-                snprintf(((SudokuGame *)game)->hint_description, 
-                         sizeof(game->hint_description),
-                         "[%s]\n%s", 
-                         lvl->level_name, lvl->strategy_names[i]);
+                /* Si la stratégie n'a pas rédigé de texte spécifique, on met un titre générique */
+                if (game->hint_description[0] == '\0') {
+                    snprintf(((SudokuGame *)game)->hint_description, 
+                             sizeof(game->hint_description),
+                             "[%s]\n%s", 
+                             lvl->level_name, lvl->strategy_names[i]);
+                }
                 return;
             }
         }
     }
 
-    // Si aucune stratégie ne trouve d'indice
     snprintf(((SudokuGame *)game)->hint_description, 
              sizeof(game->hint_description),
              "Aucun indice trouvé avec les stratégies actuelles.");

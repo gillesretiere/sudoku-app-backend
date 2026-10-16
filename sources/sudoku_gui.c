@@ -1,25 +1,23 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "game.h"
 
-// Constantes d'affichage de la grille
 #define GRID_SIZE 9
 #define CELL_SIZE 60
 #define OFFSET_X  30
 #define OFFSET_Y  30
 
-// Structure pour les boutons graphiques
 typedef struct {
     Rectangle rec;
     const char *label;
     Color color;
+    Color textColor;
 } GuiButton;
 
-// Dessine un bouton et renvoie 'true' si le joueur clique dessus (si actif)
 static bool DrawButton(GuiButton btn, bool active) {
     if (!active) {
-        // Rendu visuel d'un bouton désactivé
         DrawRectangleRounded(btn.rec, 0.2f, 4, LIGHTGRAY);
         DrawRectangleRoundedLines(btn.rec, 0.2f, 4, GRAY);
 
@@ -34,7 +32,6 @@ static bool DrawButton(GuiButton btn, bool active) {
 
     Vector2 mousePos = GetMousePosition();
     bool isHovered = CheckCollisionPointRec(mousePos, btn.rec);
-    
     Color drawColor = isHovered ? ColorAlpha(btn.color, 0.85f) : btn.color;
 
     DrawRectangleRounded(btn.rec, 0.2f, 4, drawColor);
@@ -45,9 +42,69 @@ static bool DrawButton(GuiButton btn, bool active) {
     int textX = (int)(btn.rec.x + (btn.rec.width - textWidth) / 2);
     int textY = (int)(btn.rec.y + (btn.rec.height - fontSize) / 2);
 
-    DrawText(btn.label, textX, textY, fontSize, RAYWHITE);
+    DrawText(btn.label, textX, textY, fontSize, btn.textColor);
 
     return (isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+}
+
+// Affiche du texte encadré avec saut de ligne automatique compact
+static void DrawTextWrapped(const char *text, int startX, int startY, int maxWidth, int fontSize, Color color) {
+    if (!text || text[0] == '\0') return;
+
+    int cursorX = startX;
+    int cursorY = startY;
+    int lineHeight = fontSize + 3; // Hauteur de ligne compacte
+
+    const char *p = text;
+    char word[64];
+    int wordIdx = 0;
+
+    while (*p != '\0') {
+        if (*p == '\n') {
+            if (wordIdx > 0) {
+                word[wordIdx] = '\0';
+                DrawText(word, cursorX, cursorY, fontSize, color);
+                wordIdx = 0;
+            }
+            cursorX = startX;
+            cursorY += lineHeight;
+            p++;
+            continue;
+        }
+
+        if (*p == ' ') {
+            if (wordIdx > 0) {
+                word[wordIdx] = '\0';
+                int wordWidth = MeasureText(word, fontSize);
+                if (cursorX + wordWidth > startX + maxWidth) {
+                    cursorX = startX;
+                    cursorY += lineHeight;
+                }
+                DrawText(word, cursorX, cursorY, fontSize, color);
+                cursorX += wordWidth + MeasureText(" ", fontSize);
+                wordIdx = 0;
+            } else {
+                cursorX += MeasureText(" ", fontSize);
+            }
+            p++;
+            continue;
+        }
+
+        if (wordIdx < (int)sizeof(word) - 1) {
+            word[wordIdx++] = *p;
+        }
+        p++;
+    }
+
+    if (wordIdx > 0) {
+        word[wordIdx] = '\0';
+        int wordWidth = MeasureText(word, fontSize);
+        if (cursorX + wordWidth > startX + maxWidth) {
+            cursorX = startX;
+            cursorY += lineHeight;
+        }
+        DrawText(word, cursorX, cursorY, fontSize, color);
+    }
 }
 
 int main(void) {
@@ -64,12 +121,11 @@ int main(void) {
     int selected_col = -1;
     bool show_candidates = true;
 
-    // Boutons d'action principaux
-    GuiButton btnHint  = { { 590, 20,  290, 40 }, "Indice (H)",    DARKBLUE };
-    GuiButton btnApply = { { 590, 68,  290, 40 }, "Appliquer (A)", DARKGREEN };
-    GuiButton btnNotes = { { 590, 116, 290, 40 }, "Masquer Notes (N)", DARKGRAY };
+    // Repositionnement compact des 3 boutons du haut (H=36px, Y=15, 57, 99)
+    GuiButton btnHint  = { { 590, 15,  290, 36 }, "Indice (H)",    DARKBLUE, RAYWHITE };
+    GuiButton btnApply = { { 590, 57,  290, 36 }, "Appliquer (A)", DARKGREEN, RAYWHITE };
+    GuiButton btnNotes = { { 590, 99,  290, 36 }, "Masquer Notes (N)", DARKGRAY, RAYWHITE };
 
-    // Initialisation du pavé numérique
     GuiButton numButtons[9];
     char numLabels[9][2];
     for (int i = 0; i < 9; i++) {
@@ -82,17 +138,13 @@ int main(void) {
         float x = 602.0f + c * 93.0f;
         float y = 402.0f + r * 42.0f;
 
-        numButtons[i] = (GuiButton){ { x, y, 80, 36 }, numLabels[i], YELLOW };
+        numButtons[i] = (GuiButton){ { x, y, 80, 36 }, numLabels[i], YELLOW, BLACK };
     }
 
-    GuiButton btnClear = { { 602, 528, 266, 34 }, "Effacer (0)", MAROON };
+    GuiButton btnClear = { { 602, 528, 266, 34 }, "Effacer (0)", MAROON, RAYWHITE };
 
     while (!WindowShouldClose()) {
-        // ==========================================
-        // 1. GESTION DES ENTRÉES CLAVIER & SOURIS
-        // ==========================================
-
-        // Clic sur la grille
+        // --- 1. ENTRÉES CLAVIER & SOURIS ---
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             Vector2 mousePos = GetMousePosition();
 
@@ -105,7 +157,6 @@ int main(void) {
             }
         }
 
-        // Navigation au clavier (Flèches)
         if (selected_row != -1 && selected_col != -1) {
             if (IsKeyPressed(KEY_UP) && selected_row > 0) selected_row--;
             if (IsKeyPressed(KEY_DOWN) && selected_row < GRID_SIZE - 1) selected_row++;
@@ -113,7 +164,6 @@ int main(void) {
             if (IsKeyPressed(KEY_RIGHT) && selected_col < GRID_SIZE - 1) selected_col++;
         }
 
-        // Saisie au clavier physique
         if (selected_row != -1 && selected_col != -1) {
             int digit_played = -1;
 
@@ -134,7 +184,6 @@ int main(void) {
             }
         }
 
-        // Raccourcis clavier
         if (IsKeyPressed(KEY_H)) provide_hint(&game);
         if (IsKeyPressed(KEY_A)) apply_current_hint(&game);
         if (IsKeyPressed(KEY_N)) {
@@ -142,23 +191,31 @@ int main(void) {
             btnNotes.label = show_candidates ? "Masquer Notes (N)" : "Afficher Notes (N)";
         }
 
-        // ==========================================
-        // 2. RENDU GRAPHIQUE
-        // ==========================================
+        // --- 2. RENDU GRAPHIQUE ---
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            // --- A. PLATEAU DE JEU ---
+            // A. Plateau de jeu
             for (int r = 0; r < GRID_SIZE; r++) {
                 for (int c = 0; c < GRID_SIZE; c++) {
                     int x = OFFSET_X + c * CELL_SIZE;
                     int y = OFFSET_Y + r * CELL_SIZE;
 
+                    // Case sélectionnée par le joueur (jaune)
                     if (r == selected_row && c == selected_col) {
                         DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, YELLOW);
                     }
 
                     DrawRectangleLines(x, y, CELL_SIZE, CELL_SIZE, LIGHTGRAY);
+                    // NOUVEAU : Contour bleu pour mettre en valeur les cases visées par un indice
+                    bool has_hint_highlight = (game.highlight_green[r][c] != 0 || 
+                                   game.highlight_red[r][c] != 0 || 
+                                   game.highlight_cyan[r][c] != 0 || 
+                                   game.highlight_magenta[r][c] != 0);
+
+                    if (has_hint_highlight) {
+                        DrawRectangleLinesEx((Rectangle){ (float)x, (float)y, (float)CELL_SIZE, (float)CELL_SIZE }, 3.0f, DARKBLUE);
+                    }                    
 
                     int val = (int)game.player_grid[r][c];
                     int initial_val = (int)game.initial_grid[r][c];
@@ -191,7 +248,7 @@ int main(void) {
                 }
             }
 
-            // --- B. BORDURES DES BLOCS 3x3 ---
+            // B. Bordures de blocs
             for (int i = 0; i <= GRID_SIZE; i += 3) {
                 int posX = OFFSET_X + i * CELL_SIZE;
                 int posY = OFFSET_Y + i * CELL_SIZE;
@@ -205,7 +262,7 @@ int main(void) {
                            4.0f, BLACK);
             }
 
-            // --- C. BOUTONS D'ACTION HAUT ---
+            // C. Boutons d'action
             if (DrawButton(btnHint, true))  provide_hint(&game);
             if (DrawButton(btnApply, true)) apply_current_hint(&game);
             if (DrawButton(btnNotes, true)) {
@@ -213,22 +270,22 @@ int main(void) {
                 btnNotes.label = show_candidates ? "Masquer Notes (N)" : "Afficher Notes (N)";
             }
 
-            // --- D. CARTE "ANALYSE & THÉORIE" ---
-            Rectangle infoCard = { 590, 168, 290, 180 };
+            // D. Carte "ANALYSE & THÉORIE" (Agrandie à 205px de hauteur)
+            Rectangle infoCard = { 590, 145, 290, 205 };
             DrawRectangleRounded(infoCard, 0.08f, 4, LIGHTGRAY);
             DrawRectangleRoundedLines(infoCard, 0.08f, 4, GRAY);
 
-            DrawText("ANALYSE & THÉORIE", 605, 178, 16, DARKBLUE);
-            DrawLine(605, 200, 865, 200, GRAY);
+            DrawText("ANALYSE & THEORIE", 605, 155, 16, DARKBLUE);
+            DrawLine(605, 175, 865, 175, GRAY);
 
             if (game.hint_description[0] != '\0') {
-                DrawText(game.hint_description, 605, 212, 14, DARKGRAY);
+                DrawTextWrapped(game.hint_description, 605, 183, 260, 10, DARKGRAY);
             } else {
-                DrawText("Cliquez sur 'Indice' ou\nappuyez sur la touche 'H'\npour analyser la grille.", 
-                         605, 212, 14, GRAY);
+                DrawTextWrapped("Cliquez sur 'Indice' ou appuyez sur 'H' pour analyser la grille.", 
+                                605, 183, 260, 10, GRAY);
             }
 
-            // --- E. PAVÉ NUMÉRIQUE FIXE DYNAMIQUE ---
+            // E. Pavé numérique fixe (Position Y=360 inchangée)
             Rectangle keypadCard = { 590, 360, 290, 215 };
             DrawRectangleRounded(keypadCard, 0.08f, 4, LIGHTGRAY);
             DrawRectangleRoundedLines(keypadCard, 0.08f, 4, GRAY);
@@ -236,14 +293,12 @@ int main(void) {
             DrawText("SAISIE MANUELLE", 605, 370, 16, DARKBLUE);
             DrawLine(605, 392, 865, 392, GRAY);
 
-            // Vérification de l'état de la case sélectionnée
             bool is_cell_selected = (selected_row != -1 && selected_col != -1);
             bool is_cell_empty = is_cell_selected && (game.player_grid[selected_row][selected_col] == 0);
             bool is_cell_filled_by_player = is_cell_selected && 
                                             (game.player_grid[selected_row][selected_col] != 0) && 
                                             (game.initial_grid[selected_row][selected_col] == 0);
 
-            // Dessin des boutons 1 à 9
             for (int i = 0; i < 9; i++) {
                 int digit = i + 1;
                 bool is_digit_available = false;
@@ -257,7 +312,6 @@ int main(void) {
                 }
             }
 
-            // Dessin du bouton Effacer (actif uniquement si la case contient un coup du joueur)
             if (DrawButton(btnClear, is_cell_filled_by_player)) {
                 make_move(&game, selected_row, selected_col, 0);
             }
