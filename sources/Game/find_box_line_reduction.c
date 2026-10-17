@@ -62,6 +62,17 @@ bool find_box_line_reduction(const SudokuGame *game) {
                         }
                     }
 
+                    /* Format synthétique pour l'interface graphique (GUI) */
+                    snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                             "THEORIE - Reduction Bloc-Ligne :\n"
+                             "Les candidats d'un chiffre sur une ligne sont confines dans un bloc. "
+                             "Ce chiffre est elimine du reste du bloc.\n\n"
+                             "APPLICATION :\n"
+                             "Sur la ligne %d, le %d n'apparait que dans le bloc %d.\n"
+                             "-> Eliminer le %d des autres cases du bloc %d.",
+                             r + 1, val, target_b + 1, val, target_b + 1);
+
+                    /* Format détaillé pour le terminal (CLI) */
                     printf("📖 THÉORIE — Réduction Bloc-Ligne (Box-Line Reduction) :\n");
                     printf("   Lorsque toutes les occurrences d'un candidat sur une ligne sont confinées dans un seul bloc 3x3,\n");
                     printf("   ce chiffre doit nécessairement être placé dans ce bloc sur cette ligne.\n");
@@ -127,6 +138,17 @@ bool find_box_line_reduction(const SudokuGame *game) {
                         }
                     }
 
+                    /* Format synthétique pour l'interface graphique (GUI) */
+                    snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                             "THEORIE - Reduction Bloc-Ligne :\n"
+                             "Les candidats d'un chiffre sur une colonne sont confines dans un bloc. "
+                             "Ce chiffre est elimine du reste du bloc.\n\n"
+                             "APPLICATION :\n"
+                             "Dans la colonne %d, le %d n'apparait que dans le bloc %d.\n"
+                             "-> Eliminer le %d des autres cases du bloc %d.",
+                             c + 1, val, target_b + 1, val, target_b + 1);
+
+                    /* Format détaillé pour le terminal (CLI) */
                     printf("📖 THÉORIE — Réduction Bloc-Ligne (Box-Line Reduction) :\n");
                     printf("   Lorsque toutes les occurrences d'un candidat sur une colonne sont confinées dans un seul bloc 3x3,\n");
                     printf("   ce chiffre doit nécessairement être placé dans ce bloc sur cette colonne.\n");

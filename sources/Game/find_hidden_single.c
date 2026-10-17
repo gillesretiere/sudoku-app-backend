@@ -49,6 +49,17 @@ bool find_hidden_single(const SudokuGame *game) {
                 clear_highlights(mutable_game);
                 mutable_game->highlight_green[r][target_c] |= (1 << val);
 
+                /* Format GUI */
+                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                         "THEORIE - Chiffre Cache :\n"
+                         "Si un chiffre ne peut aller nulle part ailleurs sur sa ligne, "
+                         "il doit etre place dans cette case.\n\n"
+                         "APPLICATION :\n"
+                         "Sur la ligne %d, le %d ne peut aller qu'en colonne %d.\n"
+                         "-> Placer le %d en (%d, %d).",
+                         r + 1, val, target_c + 1, val, r + 1, target_c + 1);
+
+                /* Format CLI */
                 print_theory();
                 printf("🎯 APPLICATION :\n");
                 printf("   Sur la ligne %d, le chiffre %d ne peut aller qu'en colonne %d.\n", r + 1, val, target_c + 1);
@@ -75,6 +86,17 @@ bool find_hidden_single(const SudokuGame *game) {
                 clear_highlights(mutable_game);
                 mutable_game->highlight_green[target_r][c] |= (1 << val);
 
+                /* Format GUI */
+                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                         "THEORIE - Chiffre Cache :\n"
+                         "Si un chiffre ne peut aller nulle part ailleurs dans sa colonne, "
+                         "il doit etre place dans cette case.\n\n"
+                         "APPLICATION :\n"
+                         "Dans la colonne %d, le %d ne peut aller qu'en ligne %d.\n"
+                         "-> Placer le %d en (%d, %d).",
+                         c + 1, val, target_r + 1, val, target_r + 1, c + 1);
+
+                /* Format CLI */
                 print_theory();
                 printf("🎯 APPLICATION :\n");
                 printf("   Dans la colonne %d, le chiffre %d ne peut aller qu'en ligne %d.\n", c + 1, val, target_r + 1);
@@ -111,6 +133,17 @@ bool find_hidden_single(const SudokuGame *game) {
                 clear_highlights(mutable_game);
                 mutable_game->highlight_green[target_r][target_c] |= (1 << val);
 
+                /* Format GUI */
+                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                         "THEORIE - Chiffre Cache :\n"
+                         "Si un chiffre ne peut aller nulle part ailleurs dans son bloc 3x3, "
+                         "il doit etre place dans cette case.\n\n"
+                         "APPLICATION :\n"
+                         "Dans le bloc %d, le %d ne peut aller qu'en (%d, %d).\n"
+                         "-> Placer le %d en (%d, %d).",
+                         box + 1, val, target_r + 1, target_c + 1, val, target_r + 1, target_c + 1);
+
+                /* Format CLI */
                 print_theory();
                 printf("🎯 APPLICATION :\n");
                 printf("   Dans le bloc 3x3 n°%d, le chiffre %d ne peut être placé qu'en case (%d, %d).\n", box + 1, val, target_r + 1, target_c + 1);

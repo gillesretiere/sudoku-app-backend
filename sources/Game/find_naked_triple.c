@@ -76,6 +76,29 @@ bool find_naked_triple(const SudokuGame *game) {
 
                                 const char *unit_names[] = {"la ligne", "la colonne", "le bloc 3x3"};
 
+                                // Extraire les 3 valeurs du masque pour l'affichage GUI
+                                int v1 = 0, v2 = 0, v3 = 0;
+                                for (int v = 1; v <= 9; v++) {
+                                    if (combined_mask & (1 << v)) {
+                                        if (v1 == 0) v1 = v;
+                                        else if (v2 == 0) v2 = v;
+                                        else v3 = v;
+                                    }
+                                }
+
+                                /* 3. Format synthétique pour l'interface graphique (GUI) */
+                                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                         "THEORIE - Triplet Nu :\n"
+                                         "Trois cases d'une meme zone partagent 3 candidats au total. "
+                                         "Ils sont elimines du reste de la zone.\n\n"
+                                         "APPLICATION :\n"
+                                         "Dans %s %d, (%d,%d), (%d,%d) et (%d,%d) forment {%d,%d,%d}.\n"
+                                         "-> Eliminer %d, %d et %d des autres cases.",
+                                         unit_names[unit_type], u + 1,
+                                         r1 + 1, c1 + 1, r2 + 1, c2 + 1, r3 + 1, c3 + 1,
+                                         v1, v2, v3, v1, v2, v3);
+
+                                /* 4. Format détaillé pour le terminal (CLI) */
                                 printf("📖 THÉORIE — Triplet Nu (Naked Triple) :\n");
                                 printf("   Lorsque trois cases d'une même unité ne contiennent, à elles trois,\n");
                                 printf("   qu'un ensemble de trois candidats au total, ces trois chiffres doivent y être placés.\n");

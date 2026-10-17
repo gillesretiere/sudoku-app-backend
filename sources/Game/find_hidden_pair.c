@@ -72,6 +72,19 @@ bool find_hidden_pair(const SudokuGame *game) {
 
                                 const char *unit_names[] = {"la ligne", "la colonne", "le bloc 3x3"};
 
+                                /* 3. Format synthétique pour l'interface graphique (GUI) */
+                                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                         "THEORIE - Paire Cachee :\n"
+                                         "Deux chiffres n'apparaissent que dans 2 cases d'une zone. "
+                                         "Les autres candidats de ces cases sont elimines.\n\n"
+                                         "APPLICATION :\n"
+                                         "Dans %s %d, %d et %d sont isoles en (%d, %d) et (%d, %d).\n"
+                                         "-> Eliminer les autres candidats de ces 2 cases.",
+                                         unit_names[unit_type], u + 1,
+                                         d1, d2,
+                                         r1 + 1, c1 + 1, r2 + 1, c2 + 1);
+
+                                /* 4. Format détaillé pour le terminal (CLI) */
                                 printf("📖 THÉORIE — Paire Cachée (Hidden Pair) :\n");
                                 printf("   Lorsque deux chiffres apparaissent comme candidats uniquement dans deux cases\n");
                                 printf("   d'une même unité, ces deux chiffres doivent nécessairement aller dans ces deux cases.\n");

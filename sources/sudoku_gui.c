@@ -115,7 +115,7 @@ int main(void) {
     SetTargetFPS(60);
 
     SudokuGame game;
-    init_game(&game, 1);
+    init_game(&game, 4);
 
     int selected_row = -1;
     int selected_col = -1;
@@ -213,16 +213,21 @@ int main(void) {
                                    game.highlight_cyan[r][c] != 0 || 
                                    game.highlight_magenta[r][c] != 0);
 
+                    // Si la case est surlignée par un indice, dessiner un contour bleu plus épais
                     if (has_hint_highlight) {
+                        DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, SKYBLUE);
                         DrawRectangleLinesEx((Rectangle){ (float)x, (float)y, (float)CELL_SIZE, (float)CELL_SIZE }, 3.0f, DARKBLUE);
                     }                    
 
                     int val = (int)game.player_grid[r][c];
                     int initial_val = (int)game.initial_grid[r][c];
-
+                    // Affichage de la valeur initiale (gris foncé) ou de la valeur résolue (bleu)
                     if (val != 0) {
                         char text[2] = { (char)('0' + val), '\0' };
-                        Color textColor = (initial_val != 0) ? DARKGRAY : BLUE;
+                        Color bgColor = (initial_val != 0) ? LIGHTGRAY : WHITE;
+                        DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, bgColor);
+                        DrawRectangleLines(x, y, CELL_SIZE, CELL_SIZE, LIGHTGRAY);
+                        Color textColor = (initial_val != 0) ? DARKGRAY : BLACK;
                         DrawText(text, x + 22, y + 15, 30, textColor);
                     } else if (show_candidates) {
                         for (int cand = 1; cand <= 9; cand++) {
@@ -236,7 +241,7 @@ int main(void) {
                                 Color cand_color = GRAY;
 
                                 if (game.highlight_red[r][c] & mask)       cand_color = RED;
-                                else if (game.highlight_green[r][c] & mask) cand_color = GREEN;
+                                else if (game.highlight_green[r][c] & mask) cand_color = DARKGREEN;
                                 else if (game.highlight_cyan[r][c] & mask)  cand_color = SKYBLUE;
                                 else if (game.highlight_magenta[r][c] & mask) cand_color = PURPLE;
 

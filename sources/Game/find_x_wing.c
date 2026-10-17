@@ -67,6 +67,16 @@ bool find_x_wing(const SudokuGame *game) {
                             }
                         }
 
+                        /* 3. Format synthétique pour l'interface graphique (GUI) */
+                        snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                 "THEORIE - X-Wing (Lignes) :\n"
+                                 "Le %d forme un rectangle sur les lignes %d et %d (colonnes %d et %d).\n\n"
+                                 "APPLICATION :\n"
+                                 "-> Eliminer le candidat %d du reste des colonnes %d et %d.",
+                                 val, r1 + 1, r2 + 1, c1 + 1, c2 + 1,
+                                 val, c1 + 1, c2 + 1);
+
+                        /* 4. Format détaillé pour le terminal (CLI) */
                         printf("📖 THÉORIE — X-Wing (par Lignes) :\n");
                         printf("   Le candidat %d n'apparaît que dans deux cases de la ligne %d (col. %d et %d)\n", val, r1 + 1, c1 + 1, c2 + 1);
                         printf("   et dans deux cases de la ligne %d, exactement alignées sur les MÊMES colonnes.\n", r2 + 1);
@@ -138,6 +148,16 @@ bool find_x_wing(const SudokuGame *game) {
                             }
                         }
 
+                        /* 3. Format synthétique pour l'interface graphique (GUI) */
+                        snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                 "THEORIE - X-Wing (Colonnes) :\n"
+                                 "Le %d forme un rectangle sur les colonnes %d et %d (lignes %d et %d).\n\n"
+                                 "APPLICATION :\n"
+                                 "-> Eliminer le candidat %d du reste des lignes %d et %d.",
+                                 val, c1 + 1, c2 + 1, r1 + 1, r2 + 1,
+                                 val, r1 + 1, r2 + 1);
+
+                        /* 4. Format détaillé pour le terminal (CLI) */
                         printf("📖 THÉORIE — X-Wing (par Colonnes) :\n");
                         printf("   Le candidat %d n'apparaît que dans deux cases de la colonne %d (lignes %d et %d)\n", val, c1 + 1, r1 + 1, r2 + 1);
                         printf("   et dans deux cases de la colonne %d, alignées sur les MÊMES lignes.\n", c2 + 1);

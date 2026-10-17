@@ -93,7 +93,7 @@ bool find_y_wing(const SudokuGame *game) {
                             if (can_eliminate) {
                                 clear_highlights(mutable_game);
 
-                                /* 1. Coloration du Pivot : px en Bleu (Cyan), py en Magenta */
+                                /* 1. Coloration du Pivot : px en Cyan, py en Magenta */
                                 mutable_game->highlight_cyan[pr][pc] |= (1 << px);
                                 mutable_game->highlight_magenta[pr][pc] |= (1 << py);
 
@@ -127,6 +127,18 @@ bool find_y_wing(const SudokuGame *game) {
                                     }
                                 }
 
+                                /* 5. Format synthétique pour l'interface graphique (GUI) */
+                                snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                         "THEORIE - Y-Wing :\n"
+                                         "Un pivot (%d, %d) avec pinces (%d, %d) et (%d, %d) "
+                                         "impose la présence du %d dans l'une des pinces.\n\n"
+                                         "APPLICATION :\n"
+                                         "Pivot : (%d, %d) {%d, %d} | Pinces : (%d, %d), (%d, %d)\n"
+                                         "-> Eliminer le candidat %d des cases voyant les 2 pinces.",
+                                         pr + 1, pc + 1, r1 + 1, c1 + 1, r2 + 1, c2 + 1, z,
+                                         pr + 1, pc + 1, px, py, r1 + 1, c1 + 1, r2 + 1, c2 + 1, z);
+
+                                /* 6. Format détaillé pour le terminal (CLI) */
                                 printf("📖 THÉORIE — Y-Wing (XY-Wing) :\n");
                                 printf("   Le Y-Wing utilise 3 cases bivalentes : un pivot (%d, %d) et deux pinces.\n", pr + 1, pc + 1);
                                 printf("   Si le pivot vaut %d, la pince 1 impose %d. S'il vaut %d, la pince 2 impose %d.\n", px, z, py, z);

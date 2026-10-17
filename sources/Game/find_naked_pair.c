@@ -80,6 +80,19 @@ bool find_naked_pair(const SudokuGame *game) {
 
                             const char *unit_names[] = {"la ligne", "la colonne", "le bloc 3x3"};
 
+                            /* 3. Format synthétique pour l'interface graphique (GUI) */
+                            snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                     "THEORIE - Paire Nue :\n"
+                                     "Deux cases d'une meme zone partagent exclusivement 2 candidats. "
+                                     "Ces chiffres sont elimines du reste de la zone.\n\n"
+                                     "APPLICATION :\n"
+                                     "Dans %s %d, (%d, %d) et (%d, %d) forment la paire {%d, %d}.\n"
+                                     "-> Eliminer %d et %d des autres cases.",
+                                     unit_names[unit_type], u + 1,
+                                     r1 + 1, c1 + 1, r2 + 1, c2 + 1,
+                                     val1, val2, val1, val2);
+
+                            /* 4. Format détaillé inchangé pour le terminal (CLI) */
                             printf("📖 THÉORIE — Paire Nue (Naked Pair) :\n");
                             printf("   Lorsque deux cases d'une même unité (ligne, colonne ou bloc)\n");
                             printf("   contiennent exactement les deux mêmes candidats (et aucun autre),\n");

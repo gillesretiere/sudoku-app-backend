@@ -52,7 +52,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                     if (can_eliminate) {
                         clear_highlights(mutable_game);
 
-                        // 1. Marquer en cyan les candidats alignés dans le bloc b
+                        // 1. Marquer en vert les candidats alignés dans le bloc b
                         for (int r = 0; r < 3; r++) {
                             for (int c = 0; c < 3; c++) {
                                 int curr_r = start_r + r;
@@ -71,6 +71,17 @@ bool find_pointing_pairs(const SudokuGame *game) {
                             }
                         }
 
+                        /* 3. Format synthétique pour l'interface graphique (GUI) */
+                        snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                 "THEORIE - Paires/Triplets Pointes :\n"
+                                 "Tous les candidats d'un chiffre dans un bloc sont alignes sur une ligne. "
+                                 "Ce chiffre est elimine du reste de la ligne.\n\n"
+                                 "APPLICATION :\n"
+                                 "Dans le bloc %d, le %d est aligne sur la ligne %d.\n"
+                                 "-> Eliminer le %d du reste de la ligne %d.",
+                                 b + 1, val, same_r + 1, val, same_r + 1);
+
+                        /* 4. Format détaillé pour le terminal (CLI) */
                         printf("📖 THÉORIE — Paires/Triplets Pointés (Pointing Pairs/Triples) :\n");
                         printf("   Lorsque toutes les occurrences d'un candidat dans un bloc 3x3\n");
                         printf("   sont alignées sur une même ligne, ce chiffre doit nécessairement y être placé.\n");
@@ -97,7 +108,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                     if (can_eliminate) {
                         clear_highlights(mutable_game);
 
-                        // 1. Marquer en cyan les candidats alignés dans le bloc b
+                        // 1. Marquer en vert les candidats alignés dans le bloc b
                         for (int r = 0; r < 3; r++) {
                             for (int c = 0; c < 3; c++) {
                                 int curr_r = start_r + r;
@@ -116,6 +127,17 @@ bool find_pointing_pairs(const SudokuGame *game) {
                             }
                         }
 
+                        /* 3. Format synthétique pour l'interface graphique (GUI) */
+                        snprintf(mutable_game->hint_description, sizeof(mutable_game->hint_description),
+                                 "THEORIE - Paires/Triplets Pointes :\n"
+                                 "Tous les candidats d'un chiffre dans un bloc sont alignes sur une colonne. "
+                                 "Ce chiffre est elimine du reste de la colonne.\n\n"
+                                 "APPLICATION :\n"
+                                 "Dans le bloc %d, le %d est aligne sur la colonne %d.\n"
+                                 "-> Eliminer le %d du reste de la colonne %d.",
+                                 b + 1, val, same_c + 1, val, same_c + 1);
+
+                        /* 4. Format détaillé pour le terminal (CLI) */
                         printf("📖 THÉORIE — Paires/Triplets Pointés (Pointing Pairs/Triples) :\n");
                         printf("   Lorsque toutes les occurrences d'un candidat dans un bloc 3x3\n");
                         printf("   sont alignées sur une même colonne, ce chiffre doit nécessairement y être placé.\n");
