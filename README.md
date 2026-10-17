@@ -53,3 +53,31 @@ Penser à ajouter ce code en début de chaque fichier .h et .c
 ```
 make clean && make
 ```
+
+## Consignes de développement pour passer de Linux à Mac
+Sur VPS Debian : 
+```
+# 1. Vérifie l'état de tes fichiers
+git status
+
+# 2. Ajoute les éventuelles modifications non enregistrées
+git add .
+
+# 3. Valide les modifications
+git commit -m "Mise a jour de sudoku_gui.c et du Makefile"
+
+# 4. Envoie les commits vers GitHub (étape essentielle !)
+git push origin main
+
+```
+Sur Mac : 
+```
+# 1. Déplace-toi dans le dossier du projet
+cd sudoku-app-backend
+
+# 2. Récupère les derniers changements depuis GitHub
+git pull origin main
+
+make clean && make
+./sudoku_gui
+````
