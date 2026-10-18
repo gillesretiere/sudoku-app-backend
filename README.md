@@ -70,7 +70,9 @@ git commit -m "Mise a jour de sudoku_gui.c et du Makefile"
 git push origin main
 
 ```
+
 Sur Mac : 
+
 ```
 # 1. Déplace-toi dans le dossier du projet
 cd sudoku-app-backend
@@ -80,4 +82,9 @@ git pull origin main
 
 make clean && make
 ./sudoku_gui
-````
+```
+## Banques de sons prêtes à l'emploi
+- Kenney.nl (Packs Audio) : La référence absolue pour les développeurs indépendants. Tous les éléments sont sous licence CC0 (Domaine Public, utilisables sans restriction ni attribution). Les packs UI Audio et Digital Audio contiennent exactement les bruits de clics, de validations et de victoires adaptés à une interface.
+- OpenGameArt.org : Site communautaire dédié aux ressources de jeux vidéo. En cherchant des mots-clés comme UI click, correct ou fanfare, tu trouveras de nombreux kits de bruitages (filtre la recherche sur la licence CC0 ou CC-BY).
+- Pixabay Audio & Mixkit.co : Proposent des bibliothèques d'effets sonores (Sound Effects) téléchargeables gratuitement en .wav ou .mp3, utilisables directement sans inscription.
+- Freesound.org : Base de données collaborative géante. Utile si tu cherches un son très spécifique, mais pense à vérifier la licence de chaque fichier avant téléchargement.
