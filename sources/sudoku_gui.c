@@ -23,13 +23,16 @@ typedef struct {
     Color textColor;
 } GuiButton;
 
+// Structure pour regrouper nos effets sonores et la musique de fond
 typedef struct {
     Sound click;
     Sound place;
     Sound erase;
     Sound hint;
     Sound winZone;
-    bool enabled;
+    Music bgMusic;       // Flux pour la musique de fond
+    bool musicLoaded;    // Indique si la musique est chargée
+    bool enabled;        // Indique si le périphérique audio est actif
 } GameAudio;
 
 // Génération manuelle et sécurisée d'une onde sinusoïdale en C
@@ -196,12 +199,20 @@ int main(void) {
     audio.enabled = IsAudioDeviceReady();
 
     if (audio.enabled) {
-        // Tentative de chargement des fichiers .wav sinon génération synthétique
+        // Chargement des effets sonores (fichiers .wav ou repli synthétique)
         audio.click   = FileExists("assets/click.wav")   ? LoadSound("assets/click.wav")   : CreateSynthSound(800.0f, 0.03f, 0.4f);
         audio.place   = FileExists("assets/place.wav")   ? LoadSound("assets/place.wav")   : CreateSynthSound(523.25f, 0.08f, 0.5f);
         audio.erase   = FileExists("assets/erase.wav")   ? LoadSound("assets/erase.wav")   : CreateSynthSound(261.63f, 0.10f, 0.5f);
         audio.hint    = FileExists("assets/hint.wav")    ? LoadSound("assets/hint.wav")    : CreateSynthSound(659.25f, 0.12f, 0.5f);
         audio.winZone = FileExists("assets/fanfare.wav") ? LoadSound("assets/fanfare.wav") : CreateSynthSound(880.0f, 0.25f, 0.6f);
+
+        // Chargement et lancement de la musique de fond
+        if (FileExists("assets/track.wav")) {
+            audio.bgMusic = LoadMusicStream("assets/track.wav");
+            SetMusicVolume(audio.bgMusic, 0.35f); // Volume réglé à 35% pour ne pas masquer les bruitages
+            PlayMusicStream(audio.bgMusic);
+            audio.musicLoaded = true;
+        }
     }
 
     SudokuGame game;
@@ -248,8 +259,14 @@ int main(void) {
 
     GuiButton btnClear = { { 602, 528, 266, 34 }, "Effacer (0)", MAROON, RAYWHITE };
 
+    // --- Boucle principale du jeu ---
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
+
+        // Actualisation permanente du flux audio de la musique
+        if (audio.enabled && audio.musicLoaded) {
+            UpdateMusicStream(audio.bgMusic);
+        }
 
         // 1. ANIMATION GUIRLANDE (MODE ATTRACT)
         if (appState == STATE_ATTRACT) {
@@ -608,7 +625,11 @@ int main(void) {
         EndDrawing();
     }
 
+    // Libération propre des ressources audio à la fermeture du jeu
     if (audio.enabled) {
+        if (audio.musicLoaded) {
+            UnloadMusicStream(audio.bgMusic);
+        }
         UnloadSound(audio.click);
         UnloadSound(audio.place);
         UnloadSound(audio.erase);
