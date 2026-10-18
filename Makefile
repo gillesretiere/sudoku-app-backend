@@ -34,6 +34,12 @@ OBJS_CLI = $(SRCS_ENGINE:.c=_cli.o) $(SRC_CLI:.c=_cli.o)
 # Chemins et noms exacts des exécutables cibles
 TARGET_GUI = sudoku_gui
 TARGET_CLI = sources/Game/sudoku_game
+# Nom de la bibliothèque partagée pour macOS
+TARGET_LIB = libsudoku.dylib
+
+# Règle pour compiler le moteur C sous forme de bibliothèque dynamique
+lib: $(SRCS_ENGINE)
+	$(CC) $(CFLAGS) -fPIC -DGUI_MODE -shared $(SRCS_ENGINE) -o $(TARGET_LIB)
 
 # Règle par défaut : construit les deux binaires
 all: $(TARGET_GUI) $(TARGET_CLI)

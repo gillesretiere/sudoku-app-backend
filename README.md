@@ -20,17 +20,19 @@ See the file Contributing.md for more information on how you can contribute to t
 ## Version Raylib
 
 ## Version Flutter
-'''
-┌──────────────────────────────────────────────────────────┐
-│                   Application Flutter                    │
-│      (Interface utilisateur, animations, tactile)       │
-└────────────────────────────┬─────────────────────────────┘
-                             │  Appels directs via Dart FFI
-┌────────────────────────────▼─────────────────────────────┐
-│                    Bibliothèque C                        │
-│   (libsudoku.dylib / .so : sources/Game/ & Generator/)   │
-└──────────────────────────────────────────────────────────┘
-'''
+```
+xcode-select --install
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -runFirstLaunch
+
+brew install --cask flutter
+source ~/.zshrc
+
+flutter doctor
+
+brew install cocoapods
+```
+
 
 ### Clonage du repo Git.
 ```
@@ -40,8 +42,6 @@ git clone https://github.com/gillesretiere/sudoku-app-backend.git
 ```
 
 #### Compilation des sources
-
-#### Game 
 
 ##### sudoku_game (Jeu)
 ```
