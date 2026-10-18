@@ -14,7 +14,24 @@ Release v1.0 corresponds to the code in the published book, without corrections 
 
 See the file Contributing.md for more information on how you can contribute to this repository.
 
-## Adaptation
+# Adaptation
+## Version CLI (C Language)
+
+## Version Raylib
+
+## Version Flutter
+'''
+┌──────────────────────────────────────────────────────────┐
+│                   Application Flutter                    │
+│      (Interface utilisateur, animations, tactile)       │
+└────────────────────────────┬─────────────────────────────┘
+                             │  Appels directs via Dart FFI
+┌────────────────────────────▼─────────────────────────────┐
+│                    Bibliothèque C                        │
+│   (libsudoku.dylib / .so : sources/Game/ & Generator/)   │
+└──────────────────────────────────────────────────────────┘
+'''
+
 ### Clonage du repo Git.
 ```
 ssh -Y gre@vps-1263ad51.vps.ovh.net

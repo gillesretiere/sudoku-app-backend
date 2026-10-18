@@ -190,7 +190,7 @@ int main(void) {
     const int screenWidth  = 920;
     const int screenHeight = 600;
 
-    InitWindow(screenWidth, screenHeight, "Sudoku Engine - Interface Graphique - v0.1");
+    InitWindow(screenWidth, screenHeight, "Sudoku Engine - Interface Graphique - v0.2");
     SetTargetFPS(60);
 
     InitAudioDevice();
@@ -372,7 +372,7 @@ int main(void) {
                 }
                 if (IsKeyPressed(KEY_A)) {
                     apply_current_hint(&game);
-                    PlayGameSound(audio.hint, audio.enabled);
+                    PlayGameSound(audio.place, audio.enabled);
                 }
                 if (IsKeyPressed(KEY_N)) {
                     show_candidates = !show_candidates;
@@ -490,7 +490,7 @@ int main(void) {
             }
             if (DrawButton(btnApply, can_act)) {
                 apply_current_hint(&game);
-                PlayGameSound(audio.hint, audio.enabled);
+                PlayGameSound(audio.place, audio.enabled);
             }
             if (DrawButton(btnNotes, can_act)) {
                 show_candidates = !show_candidates;
