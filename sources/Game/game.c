@@ -119,6 +119,19 @@ int c_test_init_game(int level) {
     return (int)game.player_grid[0][0];
 }
 
+// Remplit un tableau plat de 81 cases avec la grille générée
+void c_get_grid(int level, int *out_grid) {
+    SudokuGame game;
+    init_game(&game, level);
+
+    int index = 0;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_grid[index++] = (int)game.player_grid[r][c];
+        }
+    }
+}
+
 // Réinitialise les masques de surbrillation et le message d'explication
 void clear_highlights(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {

@@ -45,4 +45,5 @@ int count_candidates(const SudokuGame *game, int r, int c);
 void clear_highlights(SudokuGame *game);
 // À ajouter dans game.h pour rendre la fonction visible à l'ensemble du projet :
 int c_test_init_game(int level);
+void c_get_grid(int level, int *out_grid);
 #endif
