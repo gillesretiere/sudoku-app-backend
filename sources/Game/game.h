@@ -43,5 +43,6 @@ void compute_autonote(SudokuGame *game);
 bool has_candidate(const SudokuGame *game, int r, int c, int val);
 int count_candidates(const SudokuGame *game, int r, int c);
 void clear_highlights(SudokuGame *game);
-
+// À ajouter dans game.h pour rendre la fonction visible à l'ensemble du projet :
+int c_test_init_game(int level);
 #endif

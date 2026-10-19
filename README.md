@@ -88,40 +88,46 @@ git push origin main
 
 ```
 
-Sur Mac : 
-
+Sur Mac (workflow complet de construction): 
 ```
-# 1. Aller dans le dossier du projet
-cd sudoku-app-backend
+# ----------------------------------------------------
+# ÉTAPE 1 : Mettre à jour et tester le backend C / Raylib
+# ----------------------------------------------------
+cd ~/Documents/gre-24/dev/sudoku/sudoku-app-backend
 
-# 2. Récupèrer les derniers changements depuis GitHub
+# Récupérer les derniers changements depuis GitHub
 git pull origin main
 
-# 3. Lancer la compilation CLI et GUI (pas de lib pour Flutter)
+# Recompiler 
 make clean && make
 
-# 4. Tester la version GUI (Raylib)
+# Tester la version autonome
 ./sudoku_gui
 
-# 5. Lancer la compilation Flutter (la lib est créée après compilation par Flutter du code C récupéré en #2)
+# ----------------------------------------------------
+# ÉTAPE 2 : Synchroniser les sources C vers le projet Flutter
+# ----------------------------------------------------
+# Copier les fichiers C mis à jour vers le dossier Runner/Game de Flutter
+cp -R sources/Game/* ~/Dev/sudoku_flutter/macos/Runner/Game/
 
+# ----------------------------------------------------
+# ÉTAPE 3 : Compiler et exécuter l'application Flutter
+# ----------------------------------------------------
 cd ~/Dev/sudoku_flutter
 
-# Supprime définitivement les attributs cachés transmis par iCloud
+# Nettoyer les métadonnées cachées de macOS
 xattr -cr .
 
-# Supprime l'ancien dossier de build
+# Purger l'ancien build pour forcer la recompilation des fichiers C
 flutter clean
-
-# Récupère proprement toutes les dépendances
 flutter pub get
 
-# Lancer la compilation native sous MacOS. Le code C est compilé sous forme de bibliothèque dynamique (.dylib sur macOS).
+# Lancer la compilation native macOS
 flutter run -d macos
+```
 
 # Liaison Dart (FFI) : Flutter charge la bibliothèque et appelle la fonction C native au clic sur le bouton.
 
-```
 ## Banques de sons prêtes à l'emploi
 - Kenney.nl (Packs Audio) : La référence absolue pour les développeurs indépendants. Tous les éléments sont sous licence CC0 (Domaine Public, utilisables sans restriction ni attribution). Les packs UI Audio et Digital Audio contiennent exactement les bruits de clics, de validations et de victoires adaptés à une interface.
 - OpenGameArt.org : Site communautaire dédié aux ressources de jeux vidéo. En cherchant des mots-clés comme UI click, correct ou fanfare, tu trouveras de nombreux kits de bruitages (filtre la recherche sur la licence CC0 ou CC-BY).
