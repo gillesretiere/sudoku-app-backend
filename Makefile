@@ -45,13 +45,11 @@ OBJS_CLI = $(SRCS_ENGINE:.c=_cli.o) $(SRC_CLI:.c=_cli.o)
 # Chemins et noms exacts des exécutables cibles
 TARGET_GUI = sudoku_gui
 TARGET_CLI = sources/Game/sudoku_game
-# Nom de la bibliothèque partagée pour macOS
-TARGET_LIB = libsudoku.dylib
 
-# Règle par défaut : construit les deux binaires
+# Règle par défaut : construit les deux binaires autonomes
 all: $(TARGET_GUI) $(TARGET_CLI)
 
-# Règle pour la version graphique
+# Règle pour la version graphique Raylib
 gui: $(TARGET_GUI)
 
 $(TARGET_GUI): $(OBJS_GUI)
@@ -63,22 +61,18 @@ cli: $(TARGET_CLI)
 $(TARGET_CLI): $(OBJS_CLI)
 	$(CC) $(OBJS_CLI) -o $(TARGET_CLI) -lm
 
-# Règle pour compiler le moteur C sous forme de bibliothèque dynamique
-lib: $(SRCS_ENGINE)
-	$(CC) $(CFLAGS) -fPIC -DGUI_MODE -shared $(SRCS_ENGINE) -o $(TARGET_LIB)
-
-# Compilation des objets GUI (inclut les chemins d'en-tête Raylib et active -DGUI_MODE)
+# Compilation des objets GUI
 %_gui.o: %.c
 	$(CC) $(CFLAGS) $(CFLAGS_GUI) -DGUI_MODE -c $< -o $@
 
-# Compilation des objets CLI (sans -DGUI_MODE)
+# Compilation des objets CLI
 %_cli.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage complet des objets, des deux binaires et de la bibliothèque dynamique
+# Nettoyage
 clean:
-	rm -f $(TARGET_GUI) $(TARGET_CLI) $(TARGET_LIB)
+	rm -f $(TARGET_GUI) $(TARGET_CLI)
 	find sources -name "*_gui.o" -delete
 	find sources -name "*_cli.o" -delete
 
-.PHONY: all gui cli lib clean
+.PHONY: all gui cli clean
