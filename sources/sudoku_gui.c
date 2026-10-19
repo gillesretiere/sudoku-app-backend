@@ -190,7 +190,7 @@ int main(void) {
     const int screenWidth  = 920;
     const int screenHeight = 600;
 
-    InitWindow(screenWidth, screenHeight, "Sudoku Engine - Interface Graphique - v0.3");
+    InitWindow(screenWidth, screenHeight, "Sudoku Engine - Interface Graphique - v0.4");
     SetTargetFPS(60);
 
     InitAudioDevice();

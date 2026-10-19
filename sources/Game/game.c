@@ -108,6 +108,17 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
+#include "game.h"
+
+// Fonction d'interface simple pour tester l'initialisation depuis Flutter
+int c_test_init_game(int level) {
+    SudokuGame game;
+    init_game(&game, level);
+    
+    // On retourne la première valeur jouée ou initiale de la grille générée
+    return (int)game.player_grid[0][0];
+}
+
 // Réinitialise les masques de surbrillation et le message d'explication
 void clear_highlights(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {

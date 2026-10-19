@@ -91,14 +91,36 @@ git push origin main
 Sur Mac : 
 
 ```
-# 1. Déplace-toi dans le dossier du projet
+# 1. Aller dans le dossier du projet
 cd sudoku-app-backend
 
-# 2. Récupère les derniers changements depuis GitHub
+# 2. Récupèrer les derniers changements depuis GitHub
 git pull origin main
 
+# 3. Lancer la compilation CLI et GUI (pas de lib pour Flutter)
 make clean && make
+
+# 4. Tester la version GUI (Raylib)
 ./sudoku_gui
+
+# 5. Lancer la compilation Flutter (la lib est créée après compilation par Flutter du code C récupéré en #2)
+
+cd ~/Dev/sudoku_flutter
+
+# Supprime définitivement les attributs cachés transmis par iCloud
+xattr -cr .
+
+# Supprime l'ancien dossier de build
+flutter clean
+
+# Récupère proprement toutes les dépendances
+flutter pub get
+
+# Lancer la compilation native sous MacOS. Le code C est compilé sous forme de bibliothèque dynamique (.dylib sur macOS).
+flutter run -d macos
+
+# Liaison Dart (FFI) : Flutter charge la bibliothèque et appelle la fonction C native au clic sur le bouton.
+
 ```
 ## Banques de sons prêtes à l'emploi
 - Kenney.nl (Packs Audio) : La référence absolue pour les développeurs indépendants. Tous les éléments sont sous licence CC0 (Domaine Public, utilisables sans restriction ni attribution). Les packs UI Audio et Digital Audio contiennent exactement les bruits de clics, de validations et de victoires adaptés à une interface.
