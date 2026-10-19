@@ -1,11 +1,22 @@
 # Compilateur
 CC = gcc
 
+# Détection automatique du système d'exploitation (Darwin = macOS, Linux = VPS)
+UNAME_S := $(shell uname -s)
+
 # Options de compilation communes
 CFLAGS = -Wall -Wextra -std=c11 -DGAME_MODE -I. -Isources -Isources/Game -Isources/Generator
 
-# Bibliothèques pour l'interface graphique Raylib
-LIBS_GUI = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+# Options et bibliothèques spécifiques selon la plateforme
+ifeq ($(UNAME_S), Darwin)
+    # Configuration macOS (Homebrew sur Apple Silicon / Intel)
+    CFLAGS_GUI = -I/opt/homebrew/include -I/usr/local/include
+    LIBS_GUI   = -L/opt/homebrew/lib -L/usr/local/lib -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+else
+    # Configuration Linux / VPS
+    CFLAGS_GUI =
+    LIBS_GUI   = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+endif
 
 # Fichiers sources communs du moteur C
 SRCS_ENGINE = sources/Game/game.c \
@@ -37,37 +48,37 @@ TARGET_CLI = sources/Game/sudoku_game
 # Nom de la bibliothèque partagée pour macOS
 TARGET_LIB = libsudoku.dylib
 
-# Règle pour compiler le moteur C sous forme de bibliothèque dynamique
-lib: $(SRCS_ENGINE)
-	$(CC) $(CFLAGS) -fPIC -DGUI_MODE -shared $(SRCS_ENGINE) -o $(TARGET_LIB)
-
 # Règle par défaut : construit les deux binaires
 all: $(TARGET_GUI) $(TARGET_CLI)
 
-# Target pour la version graphique
+# Règle pour la version graphique
 gui: $(TARGET_GUI)
 
 $(TARGET_GUI): $(OBJS_GUI)
 	$(CC) $(OBJS_GUI) -o $(TARGET_GUI) $(LIBS_GUI)
 
-# Target pour la version terminal
+# Règle pour la version terminal
 cli: $(TARGET_CLI)
 
 $(TARGET_CLI): $(OBJS_CLI)
 	$(CC) $(OBJS_CLI) -o $(TARGET_CLI) -lm
 
-# Règle de compilation des objets GUI (active -DGUI_MODE)
-%_gui.o: %.c
-	$(CC) $(CFLAGS) -DGUI_MODE -c $< -o $@
+# Règle pour compiler le moteur C sous forme de bibliothèque dynamique
+lib: $(SRCS_ENGINE)
+	$(CC) $(CFLAGS) -fPIC -DGUI_MODE -shared $(SRCS_ENGINE) -o $(TARGET_LIB)
 
-# Règle de compilation des objets CLI (sans -DGUI_MODE)
+# Compilation des objets GUI (inclut les chemins d'en-tête Raylib et active -DGUI_MODE)
+%_gui.o: %.c
+	$(CC) $(CFLAGS) $(CFLAGS_GUI) -DGUI_MODE -c $< -o $@
+
+# Compilation des objets CLI (sans -DGUI_MODE)
 %_cli.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage complet des objets et des deux binaires
+# Nettoyage complet des objets, des deux binaires et de la bibliothèque dynamique
 clean:
-	rm -f $(TARGET_GUI) $(TARGET_CLI)
+	rm -f $(TARGET_GUI) $(TARGET_CLI) $(TARGET_LIB)
 	find sources -name "*_gui.o" -delete
 	find sources -name "*_cli.o" -delete
 
-.PHONY: all gui cli clean
+.PHONY: all gui cli lib clean
