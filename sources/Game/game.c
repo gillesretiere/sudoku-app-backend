@@ -462,3 +462,12 @@ int c_check_completed_zone(int row, int col) {
 
     return result;
 }
+
+// Transmet le masque de candidats (uint16_t) pour chaque case dans un tableau de 81 entiers
+void c_get_candidates(int *out_candidates) {
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_candidates[r * 9 + c] = (int)g_game.candidates[r][c];
+        }
+    }
+}
