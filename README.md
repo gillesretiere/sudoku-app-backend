@@ -87,8 +87,29 @@ git commit -m "Mise a jour de sudoku_gui.c et du Makefile"
 git push origin main
 
 ```
+Sur Mac : 
+```
+cd ~/Documents/gre-24/dev/sudoku/sudoku-app-backend
 
-Sur Mac (workflow complet de construction): 
+# (optionnel) mise de côté (dans une *boîte de réserve*) des modifications locales sur le Mac, non publiables mais dont la présence empêche de récupérer les derniers changements (git pull).
+git stash -u
+
+# Récupérer les derniers changements depuis GitHub
+git pull origin main
+
+# Recompiler 
+make clean && make
+```
+# Workflow de compilation
+## Sur VPS
+```
+make clean && make all
+./sources/Game/sudoku_game 
+
+```
+
+
+## Sur Mac (workflow complet de construction): 
 ```
 # ----------------------------------------------------
 # ÉTAPE 1 : Mettre à jour et tester le backend C / Raylib

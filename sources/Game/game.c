@@ -110,28 +110,6 @@ static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
 #include "game.h"
 
-// Fonction d'interface simple pour tester l'initialisation depuis Flutter
-int c_test_init_game(int level) {
-    SudokuGame game;
-    init_game(&game, level);
-    
-    // On retourne la première valeur jouée ou initiale de la grille générée
-    return (int)game.player_grid[0][0];
-}
-
-// Remplit un tableau plat de 81 cases avec la grille générée
-void c_get_grid(int level, int *out_grid) {
-    SudokuGame game;
-    init_game(&game, level);
-
-    int index = 0;
-    for (int r = 0; r < 9; r++) {
-        for (int c = 0; c < 9; c++) {
-            out_grid[index++] = (int)game.player_grid[r][c];
-        }
-    }
-}
-
 // Réinitialise les masques de surbrillation et le message d'explication
 void clear_highlights(SudokuGame *game) {
     for (int r = 0; r < 9; r++) {
@@ -394,4 +372,41 @@ bool apply_current_hint(SudokuGame *game) {
 
     printf("⚠️ Aucun indice à appliquer pour le moment.\n");
     return false;
+}
+
+// Fonction d'interface simple pour tester l'initialisation depuis Flutter
+int c_test_init_game(int level) {
+    SudokuGame game;
+    init_game(&game, level);
+    
+    // On retourne la première valeur jouée ou initiale de la grille générée
+    return (int)game.player_grid[0][0];
+}
+
+// Remplit un tableau plat de 81 cases avec la grille générée
+void c_get_grid(int level, int *out_grid) {
+    SudokuGame game;
+    init_game(&game, level);
+
+    int index = 0;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_grid[index++] = (int)game.player_grid[r][c];
+        }
+    }
+}
+
+// Remplit deux tableaux de 81 entiers : la grille initiale et la grille joueur
+void c_get_game_data(int level, int *out_initial, int *out_player) {
+    SudokuGame game;
+    init_game(&game, level);
+
+    int idx = 0;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_initial[idx] = (int)game.initial_grid[r][c];
+            out_player[idx]  = (int)game.player_grid[r][c];
+            idx++;
+        }
+    }
 }
