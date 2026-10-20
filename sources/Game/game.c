@@ -108,6 +108,9 @@ static StrategyLevel levels[] = {
 
 static const int N_LEVELS = sizeof(levels) / sizeof(levels[0]);
 
+// Variable statique pour maintenir la session de jeu active en mémoire
+static SudokuGame g_game;
+
 #include "game.h"
 
 // Réinitialise les masques de surbrillation et le message d'explication
@@ -396,17 +399,29 @@ void c_get_grid(int level, int *out_grid) {
     }
 }
 
-// Remplit deux tableaux de 81 entiers : la grille initiale et la grille joueur
+// Remplit deux tableaux de 81 entiers et initialise la session globale
 void c_get_game_data(int level, int *out_initial, int *out_player) {
-    SudokuGame game;
-    init_game(&game, level);
+    init_game(&g_game, level);
 
     int idx = 0;
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-            out_initial[idx] = (int)game.initial_grid[r][c];
-            out_player[idx]  = (int)game.player_grid[r][c];
+            out_initial[idx] = (int)g_game.initial_grid[r][c];
+            out_player[idx]  = (int)g_game.player_grid[r][c];
             idx++;
         }
     }
+}
+
+// Applique un coup sur la grille C via make_move et renvoie 1 (succès) ou 0 (échec)
+int c_make_move(int row, int col, int value, int *out_player) {
+    bool success = make_move(&g_game, row, col, value);
+
+    int idx = 0;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_player[idx++] = (int)g_game.player_grid[r][c];
+        }
+    }
+    return success ? 1 : 0;
 }
