@@ -425,3 +425,40 @@ int c_make_move(int row, int col, int value, int *out_player) {
     }
     return success ? 1 : 0;
 }
+
+// Vérifie si une ligne, une colonne ou un bloc 3x3 est complètement rempli et valide
+int c_check_completed_zone(int row, int col) {
+    // 0 = aucune zone, 1 = ligne, 2 = colonne, 3 = bloc 3x3
+    // Nous pouvons renvoyer un masque de bits : 
+    // Bit 0 (1) = Ligne complétée
+    // Bit 1 (2) = Colonne complétée
+    // Bit 2 (4) = Bloc 3x3 complété
+    int result = 0;
+
+    // Check ligne
+    bool row_full = true;
+    for (int c = 0; c < 9; c++) {
+        if (g_game.player_grid[row][c] == 0) { row_full = false; break; }
+    }
+    if (row_full) result |= 1;
+
+    // Check colonne
+    bool col_full = true;
+    for (int r = 0; r < 9; r++) {
+        if (g_game.player_grid[r][col] == 0) { col_full = false; break; }
+    }
+    if (col_full) result |= 2;
+
+    // Check bloc 3x3
+    bool box_full = true;
+    int start_r = (row / 3) * 3;
+    int start_c = (col / 3) * 3;
+    for (int r = start_r; r < start_r + 3; r++) {
+        for (int c = start_c; c < start_c + 3; c++) {
+            if (g_game.player_grid[r][c] == 0) { box_full = false; break; }
+        }
+    }
+    if (box_full) result |= 4;
+
+    return result;
+}

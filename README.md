@@ -148,6 +148,12 @@ flutter run -d macos
 ```
 
 # Liaison Dart (FFI) : Flutter charge la bibliothèque et appelle la fonction C native au clic sur le bouton.
+## Gestion de l'audio
+```
+cd ~/Dev/sudoku_flutter
+flutter pub add audioplayers
+``` 
+
 
 ## Banques de sons prêtes à l'emploi
 - Kenney.nl (Packs Audio) : La référence absolue pour les développeurs indépendants. Tous les éléments sont sous licence CC0 (Domaine Public, utilisables sans restriction ni attribution). Les packs UI Audio et Digital Audio contiennent exactement les bruits de clics, de validations et de victoires adaptés à une interface.

@@ -48,4 +48,5 @@ int c_test_init_game(int level);
 void c_get_grid(int level, int *out_grid);
 void c_get_game_data(int level, int *out_initial, int *out_player);
 int c_make_move(int row, int col, int value, int *out_player);
+int c_check_completed_zone(int row, int col);
 #endif
