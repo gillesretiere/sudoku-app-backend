@@ -471,3 +471,22 @@ void c_get_candidates(int *out_candidates) {
         }
     }
 }
+
+// Exécute la recherche d'indice sur la partie en cours et copie le texte dans out_desc
+void c_provide_hint(char *out_desc, int max_len) {
+    provide_hint(&g_game);
+    snprintf(out_desc, max_len, "%s", g_game.hint_description);
+}
+
+// Applique l'indice courant et remplit le tableau joueur avec la grille mise à jour
+int c_apply_current_hint(int *out_player) {
+    bool success = apply_current_hint(&g_game);
+
+    int idx = 0;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            out_player[idx++] = (int)g_game.player_grid[r][c];
+        }
+    }
+    return success ? 1 : 0;
+}

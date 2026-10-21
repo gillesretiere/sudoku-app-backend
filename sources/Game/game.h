@@ -50,4 +50,6 @@ void c_get_game_data(int level, int *out_initial, int *out_player);
 int c_make_move(int row, int col, int value, int *out_player);
 int c_check_completed_zone(int row, int col);
 void c_get_candidates(int *out_candidates);
+void c_provide_hint(char *out_desc, int max_len);
+int c_apply_current_hint(int *out_player);
 #endif
