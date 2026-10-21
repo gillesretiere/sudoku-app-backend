@@ -490,3 +490,16 @@ int c_apply_current_hint(int *out_player) {
     }
     return success ? 1 : 0;
 }
+
+// Transmet les masques de surbrillance (rouge, vert, cyan, magenta) pour les 81 cases
+void c_get_highlights(int *out_red, int *out_green, int *out_cyan, int *out_magenta) {
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            int idx = r * 9 + c;
+            out_red[idx]     = (int)g_game.highlight_red[r][c];
+            out_green[idx]   = (int)g_game.highlight_green[r][c];
+            out_cyan[idx]    = (int)g_game.highlight_cyan[r][c];
+            out_magenta[idx] = (int)g_game.highlight_magenta[r][c];
+        }
+    }
+}

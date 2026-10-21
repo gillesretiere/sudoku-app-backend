@@ -52,4 +52,5 @@ int c_check_completed_zone(int row, int col);
 void c_get_candidates(int *out_candidates);
 void c_provide_hint(char *out_desc, int max_len);
 int c_apply_current_hint(int *out_player);
+void c_get_highlights(int *out_red, int *out_green, int *out_cyan, int *out_magenta);
 #endif
