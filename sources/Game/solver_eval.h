@@ -1,17 +1,16 @@
 #ifndef SOLVER_EVAL_H
 #define SOLVER_EVAL_H
 
+#include <stdbool.h>
 #include "game.h"
 
 typedef struct {
-    int level;         /* 0, 1, 2, 3 ou -1 (rejetée) */
-    int x_wing_count;  /* Nombre de X-Wings réellement nécessaires */
-    int y_wing_count;  /* Nombre de Y-Wings exécutés */
+    int level;
+    int x_wing_count;
+    int y_wing_count;
+    bool is_solved; /* Vrai si la grille est entièrement résolue par la logique */
 } EvalResult;
 
-/**
- * Évalue la difficulté exacte d'une grille et compte les X-Wings requis.
- */
 EvalResult evaluate_puzzle_difficulty(const SudokuGame *game);
 
-#endif
+#endif /* SOLVER_EVAL_H */

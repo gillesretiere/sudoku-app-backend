@@ -486,10 +486,26 @@ static bool silent_y_wing(SudokuGame *game) {
 
 EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
     SudokuGame temp = *game;
-    EvalResult res = { .level = 0, .x_wing_count = 0 };
-    bool progress = true;
+    
+    // 1. On s'assure que la grille de jeu temporaire reflète la grille initiale
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            temp.player_grid[r][c] = temp.initial_grid[r][c];
+            temp.candidates[r][c] = 0;
+        }
+    }
 
+    EvalResult res = {
+        .level = 0,
+        .x_wing_count = 0,
+        .y_wing_count = 0,
+        .is_solved = false
+    };
+    
+    // 2. Calcul initial des notes logiques (candidates)
     compute_autonote(&temp);
+
+    bool progress = true;
 
     while (!check_victory(&temp) && progress) {
         progress = false;
@@ -514,7 +530,7 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
             continue;
         }
 
-        /* 4. Niveau 3 : Évaluation indépendante de X-Wing et Y-Wing (sans court-circuit) */
+        /* 4. Niveau 3 : Évaluation de X-Wing et Y-Wing */
         bool found_x = silent_x_wing(&temp);
         bool found_y = silent_y_wing(&temp);
 
@@ -527,10 +543,13 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
         }
     }
 
+    /* Vérification de la victoire */
     if (check_victory(&temp)) {
-        return res;
+        res.is_solved = true;
+    } else {
+        res.level = -1;
+        res.is_solved = false;
     }
 
-    res.level = -1;
     return res;
 }

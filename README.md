@@ -50,11 +50,13 @@ gcc -Wall -Wextra -std=c11 -DGAME_MODE game.c main.c candidates.c bank_loader.c 
 
 ##### inspect_bank (Inspecteur de grilles)
 ```
+cd ~/sources/Game
 gcc -Wall -Wextra -std=c11 -DGAME_MODE inspect_bank.c game.c candidates.c solver_eval.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o inspect_bank
 ```
 
 ##### build_bank (Générateur de grilles)
 ```
+cd ~/sources/Game
 gcc -Wall -Wextra -std=c11 -DGAME_MODE generate_bank.c game.c candidates.c solver_eval.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o build_bank
 ```
 ## Notes concernant les compilations séparéés CLI et GUI
