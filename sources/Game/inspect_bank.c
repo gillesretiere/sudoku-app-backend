@@ -24,7 +24,8 @@ int main(void) {
         int level, clue_count;
         char puzzle_str[82], solution_str[82];
 
-        if (sscanf(line, "%d;%d;%81s;%81s", &level, &clue_count, puzzle_str, solution_str) != 4) {
+        /* %81[^;] permet de lire exactement jusqu'au point-virgule sans déborder */
+        if (sscanf(line, "%d;%d;%81[^;];%81s", &level, &clue_count, puzzle_str, solution_str) != 4) {
             continue;
         }
 
@@ -33,8 +34,9 @@ int main(void) {
         if (level == 3) {
             n3_total++;
             SudokuGame game;
+            memset(&game, 0, sizeof(SudokuGame));
 
-            /* Reconstruction de la grille pour évaluation */
+            /* Reconstruction propre de la grille pour évaluation */
             for (int r = 0; r < 9; r++) {
                 for (int c = 0; c < 9; c++) {
                     game.initial_grid[r][c] = puzzle_str[r * 9 + c] - '0';
@@ -45,9 +47,13 @@ int main(void) {
 
             EvalResult res = evaluate_puzzle_difficulty(&game);
 
-            if (res.x_wing_count > 0 && res.y_wing_count > 0) n3_with_both++;
-            else if (res.x_wing_count > 0) n3_with_xwing++;
-            else if (res.y_wing_count > 0) n3_with_ywing++;
+            if (res.x_wing_count > 0 && res.y_wing_count > 0) {
+                n3_with_both++;
+            } else if (res.x_wing_count > 0) {
+                n3_with_xwing++;
+            } else if (res.y_wing_count > 0) {
+                n3_with_ywing++;
+            }
 
             printf("Grille N3 #%02d [%d indices] -> X-Wing : %d | Y-Wing : %d\n",
                    n3_total, clue_count, res.x_wing_count, res.y_wing_count);

@@ -10,8 +10,11 @@
 #include "find_pointing_pairs.h"
 #include "find_box_line_reduction.h"
 #include "find_naked_triple.h"
+#include "find_hidden_triple.h"
 #include "find_x_wing.h"
 #include "find_y_wing.h"
+#include "find_unique_rectangle.h"
+#include "find_swordfish.h"
 
 // Séquences de couleurs ANSI pour le terminal
 #define COLOR_RESET "\033[0m"
@@ -19,9 +22,7 @@
 #define COLOR_WHITE "\033[1;37m"
 #define COLOR_RED     "\033[1;31m"  // Rouge (Éliminations)
 #define COLOR_CYAN    "\033[1;36m"  // Cyan (Pivot Y)
-// #define COLOR_MAGENTA "\033[1;35m"  // Magenta / Rose (Pivot X)
-// Un violet/magenta plus doux et très lisible sur fond noir
-#define COLOR_MAGENTA "\033[1;38;2;190;70;255m" 
+#define COLOR_MAGENTA "\033[1;38;2;190;70;255m" // Violet/Magenta
 #define COLOR_GREEN   "\033[1;32m"  // Vert (Pince Z)
 
 typedef bool (*StrategyFn)(const SudokuGame *);
@@ -59,13 +60,15 @@ static const char *strat1_names[] = {
 static StrategyFn strat2[] = {
     find_pointing_pairs,
     find_box_line_reduction,
-    find_naked_triple
+    find_naked_triple,
+    find_hidden_triple
 };
 
 static const char *strat2_names[] = {
     "Paires/Triplets Pointés (Pointing Pairs/Triples)",
     "Réduction Bloc-Ligne (Box-Line Reduction)",
-    "Triplet Nu (Naked Triple)"
+    "Triplet Nu (Naked Triple)",
+    "Triplet Caché (Hidden Triple)"
 };
 
 // --- Niveau 3 : Stratégies professionnelles ---
@@ -79,6 +82,18 @@ static const char *strat3_names[] = {
     "Y-Wing (XY-Wing)"
 };
 
+// --- Niveau 4 : Stratégies expertes ---
+static StrategyFn strat4[] = {
+    find_swordfish,
+    find_unique_rectangle
+};
+
+static const char *strat4_names[] = {
+    "Swordfish",
+    "Rectangle Unique (Type 1)"
+};
+
+// --- Tableau global des niveaux ---
 static StrategyLevel levels[] = {
     {
         .level_name = "Niveau 0 (Trivial)",
@@ -103,6 +118,12 @@ static StrategyLevel levels[] = {
         .strategies = strat3,
         .strategy_names = strat3_names,
         .count = sizeof(strat3) / sizeof(strat3[0])
+    },
+    {
+        .level_name = "Niveau 4 (Expert)",
+        .strategies = strat4,
+        .strategy_names = strat4_names,
+        .count = sizeof(strat4) / sizeof(strat4[0])
     }
 };
 
@@ -130,7 +151,8 @@ void init_game(SudokuGame *game, int difficulty) {
     clear_highlights(game);
     printf("Chargement d'une grille pour le niveau %d...\n", difficulty);
     int target_level = difficulty - 1;
-    // réinitialise le masque d'élimination
+    
+    // Réinitialise le masque d'élimination
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             game->eliminated_mask[r][c] = 0;
@@ -254,7 +276,6 @@ void provide_hint(const SudokuGame *game) {
                        lvl->level_name, lvl->strategy_names[i]);
                 printf("-------------------------------\n\n");
 
-                /* Si la stratégie n'a pas rédigé de texte spécifique, on met un titre générique */
                 if (game->hint_description[0] == '\0') {
                     snprintf(((SudokuGame *)game)->hint_description, 
                              sizeof(game->hint_description),
@@ -309,7 +330,6 @@ void print_candidates_grid(const SudokuGame *game) {
                         bool is_green   = is_active && ((game->highlight_green[r][c] & (1 << candidate_val)) != 0);
 
                         if (is_active) {
-                            /* Priorité aux couleurs structurelles du pivot et des pinces */
                             if (is_cyan) {
                                 printf("%s%d%s", COLOR_CYAN, candidate_val, COLOR_RESET);
                             } else if (is_magenta) {
@@ -341,7 +361,6 @@ void print_candidates_grid(const SudokuGame *game) {
 bool apply_current_hint(SudokuGame *game) {
     bool has_red = false;
 
-    /* 1. Vérifie s'il y a des éliminations rouges à appliquer */
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (game->highlight_red[r][c] != 0) {
@@ -358,7 +377,6 @@ bool apply_current_hint(SudokuGame *game) {
         return true;
     }
 
-    /* 2. Si aucune élimination rouge, vérifie s'il y a un placement vert (Naked/Hidden Single) */
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (game->highlight_green[r][c] != 0 && game->highlight_cyan[r][c] == 0 && game->highlight_magenta[r][c] == 0) {
@@ -377,16 +395,12 @@ bool apply_current_hint(SudokuGame *game) {
     return false;
 }
 
-// Fonction d'interface simple pour tester l'initialisation depuis Flutter
 int c_test_init_game(int level) {
     SudokuGame game;
     init_game(&game, level);
-    
-    // On retourne la première valeur jouée ou initiale de la grille générée
     return (int)game.player_grid[0][0];
 }
 
-// Remplit un tableau plat de 81 cases avec la grille générée
 void c_get_grid(int level, int *out_grid) {
     SudokuGame game;
     init_game(&game, level);
@@ -399,7 +413,6 @@ void c_get_grid(int level, int *out_grid) {
     }
 }
 
-// Remplit deux tableaux de 81 entiers et initialise la session globale
 void c_get_game_data(int level, int *out_initial, int *out_player) {
     init_game(&g_game, level);
 
@@ -413,7 +426,6 @@ void c_get_game_data(int level, int *out_initial, int *out_player) {
     }
 }
 
-// Applique un coup sur la grille C via make_move et renvoie 1 (succès) ou 0 (échec)
 int c_make_move(int row, int col, int value, int *out_player) {
     bool success = make_move(&g_game, row, col, value);
 
@@ -426,30 +438,21 @@ int c_make_move(int row, int col, int value, int *out_player) {
     return success ? 1 : 0;
 }
 
-// Vérifie si une ligne, une colonne ou un bloc 3x3 est complètement rempli et valide
 int c_check_completed_zone(int row, int col) {
-    // 0 = aucune zone, 1 = ligne, 2 = colonne, 3 = bloc 3x3
-    // Nous pouvons renvoyer un masque de bits : 
-    // Bit 0 (1) = Ligne complétée
-    // Bit 1 (2) = Colonne complétée
-    // Bit 2 (4) = Bloc 3x3 complété
     int result = 0;
 
-    // Check ligne
     bool row_full = true;
     for (int c = 0; c < 9; c++) {
         if (g_game.player_grid[row][c] == 0) { row_full = false; break; }
     }
     if (row_full) result |= 1;
 
-    // Check colonne
     bool col_full = true;
     for (int r = 0; r < 9; r++) {
         if (g_game.player_grid[r][col] == 0) { col_full = false; break; }
     }
     if (col_full) result |= 2;
 
-    // Check bloc 3x3
     bool box_full = true;
     int start_r = (row / 3) * 3;
     int start_c = (col / 3) * 3;
@@ -463,7 +466,6 @@ int c_check_completed_zone(int row, int col) {
     return result;
 }
 
-// Transmet le masque de candidats (uint16_t) pour chaque case dans un tableau de 81 entiers
 void c_get_candidates(int *out_candidates) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
@@ -472,13 +474,11 @@ void c_get_candidates(int *out_candidates) {
     }
 }
 
-// Exécute la recherche d'indice sur la partie en cours et copie le texte dans out_desc
 void c_provide_hint(char *out_desc, int max_len) {
     provide_hint(&g_game);
     snprintf(out_desc, max_len, "%s", g_game.hint_description);
 }
 
-// Applique l'indice courant et remplit le tableau joueur avec la grille mise à jour
 int c_apply_current_hint(int *out_player) {
     bool success = apply_current_hint(&g_game);
 
@@ -491,7 +491,6 @@ int c_apply_current_hint(int *out_player) {
     return success ? 1 : 0;
 }
 
-// Transmet les masques de surbrillance (rouge, vert, cyan, magenta) pour les 81 cases
 void c_get_highlights(int *out_red, int *out_green, int *out_cyan, int *out_magenta) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
