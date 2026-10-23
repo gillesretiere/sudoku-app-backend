@@ -8,7 +8,9 @@ typedef struct {
     int level;
     int x_wing_count;
     int y_wing_count;
-    bool is_solved; /* Vrai si la grille est entièrement résolue par la logique */
+    int swordfish_count;
+    int unique_rectangle_count;
+    bool is_solved;
 } EvalResult;
 
 EvalResult evaluate_puzzle_difficulty(const SudokuGame *game);

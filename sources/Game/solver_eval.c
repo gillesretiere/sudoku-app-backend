@@ -2,6 +2,9 @@
 #include <stdbool.h>
 #include "solver_eval.h"
 #include "candidates.h"
+#include "find_hidden_triple.h"
+#include "find_swordfish.h"
+#include "find_unique_rectangle.h"
 
 static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     if (game->player_grid[r][c] == 0 && (game->candidates[r][c] & (1 << val))) {
@@ -487,7 +490,6 @@ static bool silent_y_wing(SudokuGame *game) {
 EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
     SudokuGame temp = *game;
     
-    // 1. On s'assure que la grille de jeu temporaire reflète la grille initiale
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             temp.player_grid[r][c] = temp.initial_grid[r][c];
@@ -499,10 +501,11 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
         .level = 0,
         .x_wing_count = 0,
         .y_wing_count = 0,
+        .swordfish_count = 0,
+        .unique_rectangle_count = 0,
         .is_solved = false
     };
     
-    // 2. Calcul initial des notes logiques (candidates)
     compute_autonote(&temp);
 
     bool progress = true;
@@ -510,27 +513,30 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
     while (!check_victory(&temp) && progress) {
         progress = false;
 
-        /* 1. Singles */
+        /* 1. Niveau 0 : Singles */
         if (silent_singles(&temp)) {
             progress = true;
             continue;
         }
 
-        /* 2. Paires (Nues et Cachées) */
+        /* 2. Niveau 1 : Paires (Nues et Cachées) */
         if (silent_naked_pairs(&temp) || silent_hidden_pairs(&temp)) {
             if (res.level < 1) res.level = 1;
             progress = true;
             continue;
         }
 
-        /* 3. Intersections & Triplets */
-        if (silent_pointing_pairs(&temp) || silent_box_line_reduction(&temp) || silent_naked_triples(&temp)) {
+        /* 3. Niveau 2 : Intersections & Triplets */
+        if (silent_pointing_pairs(&temp) || 
+            silent_box_line_reduction(&temp) || 
+            silent_naked_triples(&temp) || 
+            find_hidden_triple(&temp)) {
             if (res.level < 2) res.level = 2;
             progress = true;
             continue;
         }
 
-        /* 4. Niveau 3 : Évaluation de X-Wing et Y-Wing */
+        /* 4. Niveau 3 : X-Wing et Y-Wing */
         bool found_x = silent_x_wing(&temp);
         bool found_y = silent_y_wing(&temp);
 
@@ -541,9 +547,20 @@ EvalResult evaluate_puzzle_difficulty(const SudokuGame *game) {
             progress = true;
             continue;
         }
+
+        /* 5. Niveau 4 : Swordfish et Rectangle Unique */
+        bool found_sword = find_swordfish(&temp);
+        bool found_ur = find_unique_rectangle(&temp);
+
+        if (found_sword || found_ur) {
+            if (res.level < 4) res.level = 4;
+            if (found_sword) res.swordfish_count++;
+            if (found_ur) res.unique_rectangle_count++;
+            progress = true;
+            continue;
+        }
     }
 
-    /* Vérification de la victoire */
     if (check_victory(&temp)) {
         res.is_solved = true;
     } else {
