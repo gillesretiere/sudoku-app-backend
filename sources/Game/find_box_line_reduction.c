@@ -92,7 +92,7 @@ bool find_box_line_reduction(SudokuGame *game) {
             bool same_box = true;
 
             for (int r = 0; r < 9; r++) {
-                if (game->player_grid[r][c] == 0 && has_candidate(&game, r, c, val)) {
+                if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
                     count_in_col++;
                     int b = (r / 3) * 3 + (c / 3);
                     if (target_b == -1) target_b = b;
