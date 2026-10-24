@@ -32,6 +32,9 @@ SRCS_ENGINE = sources/Game/game.c \
               sources/Game/find_naked_triple.c \
               sources/Game/find_x_wing.c \
               sources/Game/find_y_wing.c \
+              sources/Game/find_unique_rectangle.c \
+              sources/Game/find_swordfish.c \
+              sources/Game/find_hidden_triple.c \
               $(wildcard sources/Generator/*.c)
 
 # Fichiers sources des points d'entrée
