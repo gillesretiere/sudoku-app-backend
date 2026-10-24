@@ -5,6 +5,6 @@
 #include "game.h"
 
 // Cherche un chiffre qui n'a qu'un emplacement possible sur sa ligne.
-bool find_hidden_single(const SudokuGame *game);
+bool find_hidden_single(SudokuGame *game);
 
 #endif

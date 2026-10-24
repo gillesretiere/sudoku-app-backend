@@ -3,7 +3,7 @@
 #include "find_naked_pair.h"
 #include "candidates.h"
 
-static bool eliminates_candidates_in_unit(const SudokuGame *game, int r1, int c1, int r2, int c2, int val1, int val2, const int cells[9][2]) {
+static bool eliminates_candidates_in_unit(SudokuGame *game, int r1, int c1, int r2, int c2, int val1, int val2, const int cells[9][2]) {
     for (int i = 0; i < 9; i++) {
         int r = cells[i][0];
         int c = cells[i][1];
@@ -19,9 +19,8 @@ static bool eliminates_candidates_in_unit(const SudokuGame *game, int r1, int c1
     return false;
 }
 
-bool find_naked_pair(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_naked_pair(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -42,22 +41,22 @@ bool find_naked_pair(const SudokuGame *game) {
 
             for (int i = 0; i < 8; i++) {
                 int r1 = cells[i][0], c1 = cells[i][1];
-                if (temp.player_grid[r1][c1] != 0 || count_candidates(&temp, r1, c1) != 2) continue;
+                if (game->player_grid[r1][c1] != 0 || count_candidates(game, r1, c1) != 2) continue;
 
                 for (int j = i + 1; j < 9; j++) {
                     int r2 = cells[j][0], c2 = cells[j][1];
-                    if (temp.player_grid[r2][c2] != 0 || count_candidates(&temp, r2, c2) != 2) continue;
+                    if (game->player_grid[r2][c2] != 0 || count_candidates(game, r2, c2) != 2) continue;
 
-                    if (temp.candidates[r1][c1] == temp.candidates[r2][c2]) {
+                    if (game->candidates[r1][c1] == game->candidates[r2][c2]) {
                         int val1 = 0, val2 = 0;
                         for (int v = 1; v <= 9; v++) {
-                            if (has_candidate(&temp, r1, c1, v)) {
+                            if (has_candidate(game, r1, c1, v)) {
                                 if (val1 == 0) val1 = v;
                                 else val2 = v;
                             }
                         }
 
-                        if (eliminates_candidates_in_unit(&temp, r1, c1, r2, c2, val1, val2, cells)) {
+                        if (eliminates_candidates_in_unit(game, r1, c1, r2, c2, val1, val2, cells)) {
                             clear_highlights(mutable_game);
 
                             // 1. Surligner la Paire Nue en VERT
@@ -67,13 +66,13 @@ bool find_naked_pair(const SudokuGame *game) {
                             // 2. Surligner les candidats à éliminer en ROUGE dans le reste de l'unité
                             for (int k = 0; k < 9; k++) {
                                 int r = cells[k][0], c = cells[k][1];
-                                if ((r == r1 && c == c1) || (r == r2 && c == c2) || temp.player_grid[r][c] != 0) {
+                                if ((r == r1 && c == c1) || (r == r2 && c == c2) || game->player_grid[r][c] != 0) {
                                     continue;
                                 }
-                                if (has_candidate(&temp, r, c, val1)) {
+                                if (has_candidate(game, r, c, val1)) {
                                     mutable_game->highlight_red[r][c] |= (1 << val1);
                                 }
-                                if (has_candidate(&temp, r, c, val2)) {
+                                if (has_candidate(game, r, c, val2)) {
                                     mutable_game->highlight_red[r][c] |= (1 << val2);
                                 }
                             }

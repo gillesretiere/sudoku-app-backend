@@ -3,9 +3,8 @@
 #include "find_x_wing.h"
 #include "candidates.h"
 
-bool find_x_wing(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_x_wing(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -16,7 +15,7 @@ bool find_x_wing(const SudokuGame *game) {
             int count_r1 = 0;
 
             for (int c = 0; c < 9; c++) {
-                if (temp.player_grid[r1][c] == 0 && has_candidate(&temp, r1, c, val)) {
+                if (game->player_grid[r1][c] == 0 && has_candidate(game, r1, c, val)) {
                     cols_r1[count_r1++] = c;
                 }
             }
@@ -28,7 +27,7 @@ bool find_x_wing(const SudokuGame *game) {
                 int count_r2 = 0;
 
                 for (int c = 0; c < 9; c++) {
-                    if (temp.player_grid[r2][c] == 0 && has_candidate(&temp, r2, c, val)) {
+                    if (game->player_grid[r2][c] == 0 && has_candidate(game, r2, c, val)) {
                         cols_r2[count_r2++] = c;
                     }
                 }
@@ -43,8 +42,8 @@ bool find_x_wing(const SudokuGame *game) {
                     bool can_eliminate = false;
                     for (int r = 0; r < 9; r++) {
                         if (r == r1 || r == r2) continue;
-                        if (temp.player_grid[r][c1] == 0 && has_candidate(&temp, r, c1, val)) can_eliminate = true;
-                        if (temp.player_grid[r][c2] == 0 && has_candidate(&temp, r, c2, val)) can_eliminate = true;
+                        if (game->player_grid[r][c1] == 0 && has_candidate(game, r, c1, val)) can_eliminate = true;
+                        if (game->player_grid[r][c2] == 0 && has_candidate(game, r, c2, val)) can_eliminate = true;
                     }
 
                     if (can_eliminate) {
@@ -59,10 +58,10 @@ bool find_x_wing(const SudokuGame *game) {
                         // 2. Éliminations en ROUGE sur les colonnes c1 et c2
                         for (int r = 0; r < 9; r++) {
                             if (r == r1 || r == r2) continue;
-                            if (temp.player_grid[r][c1] == 0 && has_candidate(&temp, r, c1, val)) {
+                            if (game->player_grid[r][c1] == 0 && has_candidate(game, r, c1, val)) {
                                 mutable_game->highlight_red[r][c1] |= (1 << val);
                             }
-                            if (temp.player_grid[r][c2] == 0 && has_candidate(&temp, r, c2, val)) {
+                            if (game->player_grid[r][c2] == 0 && has_candidate(game, r, c2, val)) {
                                 mutable_game->highlight_red[r][c2] |= (1 << val);
                             }
                         }
@@ -98,7 +97,7 @@ bool find_x_wing(const SudokuGame *game) {
             int count_c1 = 0;
 
             for (int r = 0; r < 9; r++) {
-                if (temp.player_grid[r][c1] == 0 && has_candidate(&temp, r, c1, val)) {
+                if (game->player_grid[r][c1] == 0 && has_candidate(game, r, c1, val)) {
                     rows_c1[count_c1++] = r;
                 }
             }
@@ -110,7 +109,7 @@ bool find_x_wing(const SudokuGame *game) {
                 int count_c2 = 0;
 
                 for (int r = 0; r < 9; r++) {
-                    if (temp.player_grid[r][c2] == 0 && has_candidate(&temp, r, c2, val)) {
+                    if (game->player_grid[r][c2] == 0 && has_candidate(game, r, c2, val)) {
                         rows_c2[count_c2++] = r;
                     }
                 }
@@ -124,8 +123,8 @@ bool find_x_wing(const SudokuGame *game) {
                     bool can_eliminate = false;
                     for (int c = 0; c < 9; c++) {
                         if (c == c1 || c == c2) continue;
-                        if (temp.player_grid[r1][c] == 0 && has_candidate(&temp, r1, c, val)) can_eliminate = true;
-                        if (temp.player_grid[r2][c] == 0 && has_candidate(&temp, r2, c, val)) can_eliminate = true;
+                        if (game->player_grid[r1][c] == 0 && has_candidate(game, r1, c, val)) can_eliminate = true;
+                        if (game->player_grid[r2][c] == 0 && has_candidate(game, r2, c, val)) can_eliminate = true;
                     }
 
                     if (can_eliminate) {
@@ -140,10 +139,10 @@ bool find_x_wing(const SudokuGame *game) {
                         // 2. Éliminations en ROUGE sur les lignes r1 et r2
                         for (int c = 0; c < 9; c++) {
                             if (c == c1 || c == c2) continue;
-                            if (temp.player_grid[r1][c] == 0 && has_candidate(&temp, r1, c, val)) {
+                            if (game->player_grid[r1][c] == 0 && has_candidate(game, r1, c, val)) {
                                 mutable_game->highlight_red[r1][c] |= (1 << val);
                             }
-                            if (temp.player_grid[r2][c] == 0 && has_candidate(&temp, r2, c, val)) {
+                            if (game->player_grid[r2][c] == 0 && has_candidate(game, r2, c, val)) {
                                 mutable_game->highlight_red[r2][c] |= (1 << val);
                             }
                         }

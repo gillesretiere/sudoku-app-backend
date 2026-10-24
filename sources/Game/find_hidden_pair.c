@@ -3,9 +3,9 @@
 #include "find_hidden_pair.h"
 #include "candidates.h"
 
-bool find_hidden_pair(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_hidden_pair(SudokuGame *game) {
+
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -30,10 +30,10 @@ bool find_hidden_pair(const SudokuGame *game) {
 
                     for (int i = 0; i < 9; i++) {
                         int r = cells[i][0], c = cells[i][1];
-                        if (temp.player_grid[r][c] != 0) continue;
+                        if (game->player_grid[r][c] != 0) continue;
 
-                        bool candidate_d1 = has_candidate(&temp, r, c, d1);
-                        bool candidate_d2 = has_candidate(&temp, r, c, d2);
+                        bool candidate_d1 = has_candidate(game, r, c, d1);
+                        bool candidate_d2 = has_candidate(game, r, c, d2);
 
                         if (candidate_d1) count_d1++;
                         if (candidate_d2) count_d2++;
@@ -48,10 +48,10 @@ bool find_hidden_pair(const SudokuGame *game) {
                         int r1 = cells[cell1_idx][0], c1 = cells[cell1_idx][1];
                         int r2 = cells[cell2_idx][0], c2 = cells[cell2_idx][1];
 
-                        if (has_candidate(&temp, r1, c1, d1) && has_candidate(&temp, r1, c1, d2) &&
-                            has_candidate(&temp, r2, c2, d1) && has_candidate(&temp, r2, c2, d2)) {
+                        if (has_candidate(game, r1, c1, d1) && has_candidate(game, r1, c1, d2) &&
+                            has_candidate(game, r2, c2, d1) && has_candidate(game, r2, c2, d2)) {
 
-                            if (count_candidates(&temp, r1, c1) > 2 || count_candidates(&temp, r2, c2) > 2) {
+                            if (count_candidates(game, r1, c1) > 2 || count_candidates(game, r2, c2) > 2) {
                                 clear_highlights(mutable_game);
 
                                 // 1. Mettre les deux chiffres préservés d1 et d2 en VERT
@@ -61,10 +61,10 @@ bool find_hidden_pair(const SudokuGame *game) {
                                 // 2. Mettre tous les autres candidats parasites de ces 2 cases en ROUGE
                                 for (int v = 1; v <= 9; v++) {
                                     if (v != d1 && v != d2) {
-                                        if (has_candidate(&temp, r1, c1, v)) {
+                                        if (has_candidate(game, r1, c1, v)) {
                                             mutable_game->highlight_red[r1][c1] |= (1 << v);
                                         }
-                                        if (has_candidate(&temp, r2, c2, v)) {
+                                        if (has_candidate(game, r2, c2, v)) {
                                             mutable_game->highlight_red[r2][c2] |= (1 << v);
                                         }
                                     }

@@ -3,9 +3,8 @@
 #include "find_box_line_reduction.h"
 #include "candidates.h"
 
-bool find_box_line_reduction(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_box_line_reduction(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -17,7 +16,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
             bool same_box = true;
 
             for (int c = 0; c < 9; c++) {
-                if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
                     count_in_row++;
                     int b = (r / 3) * 3 + (c / 3);
                     if (target_b == -1) target_b = b;
@@ -34,7 +33,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
                     for (int bc = 0; bc < 3; bc++) {
                         int curr_r = start_r + br;
                         int curr_c = start_c + bc;
-                        if (curr_r != r && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                        if (curr_r != r && game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                             can_eliminate = true;
                             break;
                         }
@@ -46,7 +45,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
 
                     // Candidats sources en VERT sur la ligne
                     for (int c = 0; c < 9; c++) {
-                        if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                        if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
                             mutable_game->highlight_green[r][c] |= (1 << val);
                         }
                     }
@@ -56,7 +55,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
                         for (int bc = 0; bc < 3; bc++) {
                             int curr_r = start_r + br;
                             int curr_c = start_c + bc;
-                            if (curr_r != r && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                            if (curr_r != r && game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                                 mutable_game->highlight_red[curr_r][curr_c] |= (1 << val);
                             }
                         }
@@ -93,7 +92,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
             bool same_box = true;
 
             for (int r = 0; r < 9; r++) {
-                if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                if (game->player_grid[r][c] == 0 && has_candidate(&game, r, c, val)) {
                     count_in_col++;
                     int b = (r / 3) * 3 + (c / 3);
                     if (target_b == -1) target_b = b;
@@ -110,7 +109,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
                     for (int bc = 0; bc < 3; bc++) {
                         int curr_r = start_r + br;
                         int curr_c = start_c + bc;
-                        if (curr_c != c && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                        if (curr_c != c && game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                             can_eliminate = true;
                             break;
                         }
@@ -122,7 +121,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
 
                     // Candidats sources en VERT sur la colonne
                     for (int r = 0; r < 9; r++) {
-                        if (temp.player_grid[r][c] == 0 && has_candidate(&temp, r, c, val)) {
+                        if (game->player_grid[r][c] == 0 && has_candidate(game, r, c, val)) {
                             mutable_game->highlight_green[r][c] |= (1 << val);
                         }
                     }
@@ -132,7 +131,7 @@ bool find_box_line_reduction(const SudokuGame *game) {
                         for (int bc = 0; bc < 3; bc++) {
                             int curr_r = start_r + br;
                             int curr_c = start_c + bc;
-                            if (curr_c != c && temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                            if (curr_c != c && game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                                 mutable_game->highlight_red[curr_r][curr_c] |= (1 << val);
                             }
                         }

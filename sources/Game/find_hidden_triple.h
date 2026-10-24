@@ -8,6 +8,6 @@
  * Recherche et élimine les candidats superflus d'un Triplet Caché.
  * Renvoie true si au moins un candidat a été éliminé.
  */
-bool find_hidden_triple(const SudokuGame *game);
+bool find_hidden_triple(SudokuGame *game);
 
 #endif /* FIND_HIDDEN_TRIPLE_H */

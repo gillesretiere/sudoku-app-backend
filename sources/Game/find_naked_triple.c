@@ -3,13 +3,12 @@
 #include "find_naked_triple.h"
 #include "candidates.h"
 
-static int get_candidates_mask(const SudokuGame *game, int r, int c) {
+static int get_candidates_mask(SudokuGame *game, int r, int c) {
     return game->candidates[r][c];
 }
 
-bool find_naked_triple(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_naked_triple(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -29,20 +28,20 @@ bool find_naked_triple(const SudokuGame *game) {
 
             for (int i = 0; i < 7; i++) {
                 int r1 = cells[i][0], c1 = cells[i][1];
-                if (temp.player_grid[r1][c1] != 0) continue;
-                int m1 = get_candidates_mask(&temp, r1, c1);
+                if (game->player_grid[r1][c1] != 0) continue;
+                int m1 = get_candidates_mask(game, r1, c1);
                 if (m1 == 0 || __builtin_popcount(m1) > 3) continue;
 
                 for (int j = i + 1; j < 8; j++) {
                     int r2 = cells[j][0], c2 = cells[j][1];
-                    if (temp.player_grid[r2][c2] != 0) continue;
-                    int m2 = get_candidates_mask(&temp, r2, c2);
+                    if (game->player_grid[r2][c2] != 0) continue;
+                    int m2 = get_candidates_mask(game, r2, c2);
                     if (m2 == 0 || __builtin_popcount(m2) > 3) continue;
 
                     for (int k = j + 1; k < 9; k++) {
                         int r3 = cells[k][0], c3 = cells[k][1];
-                        if (temp.player_grid[r3][c3] != 0) continue;
-                        int m3 = get_candidates_mask(&temp, r3, c3);
+                        if (game->player_grid[r3][c3] != 0) continue;
+                        int m3 = get_candidates_mask(game, r3, c3);
                         if (m3 == 0 || __builtin_popcount(m3) > 3) continue;
 
                         int combined_mask = m1 | m2 | m3;
@@ -51,7 +50,7 @@ bool find_naked_triple(const SudokuGame *game) {
                             for (int idx = 0; idx < 9; idx++) {
                                 if (idx == i || idx == j || idx == k) continue;
                                 int r = cells[idx][0], c = cells[idx][1];
-                                if (temp.player_grid[r][c] == 0 && (get_candidates_mask(&temp, r, c) & combined_mask) != 0) {
+                                if (game->player_grid[r][c] == 0 && (get_candidates_mask(game, r, c) & combined_mask) != 0) {
                                     can_eliminate = true;
                                     break;
                                 }
@@ -69,8 +68,8 @@ bool find_naked_triple(const SudokuGame *game) {
                                 for (int idx = 0; idx < 9; idx++) {
                                     if (idx == i || idx == j || idx == k) continue;
                                     int r = cells[idx][0], c = cells[idx][1];
-                                    if (temp.player_grid[r][c] == 0) {
-                                        mutable_game->highlight_red[r][c] |= (get_candidates_mask(&temp, r, c) & combined_mask);
+                                    if (game->player_grid[r][c] == 0) {
+                                        mutable_game->highlight_red[r][c] |= (get_candidates_mask(game, r, c) & combined_mask);
                                     }
                                 }
 

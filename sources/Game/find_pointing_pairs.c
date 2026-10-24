@@ -3,9 +3,8 @@
 #include "find_pointing_pairs.h"
 #include "candidates.h"
 
-bool find_pointing_pairs(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_pointing_pairs(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
@@ -25,7 +24,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                     int curr_r = start_r + r;
                     int curr_c = start_c + c;
 
-                    if (temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                    if (game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                         count_in_box++;
 
                         if (same_r == -1) same_r = curr_r;
@@ -43,7 +42,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                     bool can_eliminate = false;
                     for (int col = 0; col < 9; col++) {
                         int box_of_col = (same_r / 3) * 3 + (col / 3);
-                        if (box_of_col != b && temp.player_grid[same_r][col] == 0 && has_candidate(&temp, same_r, col, val)) {
+                        if (box_of_col != b && game->player_grid[same_r][col] == 0 && has_candidate(game, same_r, col, val)) {
                             can_eliminate = true;
                             break;
                         }
@@ -57,7 +56,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                             for (int c = 0; c < 3; c++) {
                                 int curr_r = start_r + r;
                                 int curr_c = start_c + c;
-                                if (temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                                if (game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                                     mutable_game->highlight_green[curr_r][curr_c] |= (1 << val);
                                 }
                             }
@@ -66,7 +65,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                         // 2. Marquer en rouge uniquement les candidats 'val' à éliminer sur la ligne hors du bloc b
                         for (int col = 0; col < 9; col++) {
                             int box_of_col = (same_r / 3) * 3 + (col / 3);
-                            if (box_of_col != b && temp.player_grid[same_r][col] == 0 && has_candidate(&temp, same_r, col, val)) {
+                            if (box_of_col != b && game->player_grid[same_r][col] == 0 && has_candidate(game, same_r, col, val)) {
                                 mutable_game->highlight_red[same_r][col] |= (1 << val);
                             }
                         }
@@ -99,7 +98,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                     bool can_eliminate = false;
                     for (int row = 0; row < 9; row++) {
                         int box_of_row = (row / 3) * 3 + (same_c / 3);
-                        if (box_of_row != b && temp.player_grid[row][same_c] == 0 && has_candidate(&temp, row, same_c, val)) {
+                        if (box_of_row != b && game->player_grid[row][same_c] == 0 && has_candidate(game, row, same_c, val)) {
                             can_eliminate = true;
                             break;
                         }
@@ -113,7 +112,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                             for (int c = 0; c < 3; c++) {
                                 int curr_r = start_r + r;
                                 int curr_c = start_c + c;
-                                if (temp.player_grid[curr_r][curr_c] == 0 && has_candidate(&temp, curr_r, curr_c, val)) {
+                                if (game->player_grid[curr_r][curr_c] == 0 && has_candidate(game, curr_r, curr_c, val)) {
                                     mutable_game->highlight_green[curr_r][curr_c] |= (1 << val);
                                 }
                             }
@@ -122,7 +121,7 @@ bool find_pointing_pairs(const SudokuGame *game) {
                         // 2. Marquer en rouge uniquement les candidats 'val' à éliminer sur la colonne hors du bloc b
                         for (int row = 0; row < 9; row++) {
                             int box_of_row = (row / 3) * 3 + (same_c / 3);
-                            if (box_of_row != b && temp.player_grid[row][same_c] == 0 && has_candidate(&temp, row, same_c, val)) {
+                            if (box_of_row != b && game->player_grid[row][same_c] == 0 && has_candidate(game, row, same_c, val)) {
                                 mutable_game->highlight_red[row][same_c] |= (1 << val);
                             }
                         }

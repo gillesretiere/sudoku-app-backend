@@ -3,7 +3,7 @@
 #include "find_naked_single.h"
 #include "candidates.h"
 
-static bool is_valid(const SudokuGame *game, int r, int c, int val) {
+static bool is_valid(SudokuGame *game, int r, int c, int val) {
     for (int i = 0; i < 9; i++) {
         if (game->player_grid[r][i] == val || game->player_grid[i][c] == val) {
             return false;
@@ -22,7 +22,7 @@ static bool is_valid(const SudokuGame *game, int r, int c, int val) {
     return true;
 }
 
-bool find_naked_single(const SudokuGame *game) {
+bool find_naked_single(SudokuGame *game) {
     SudokuGame *mutable_game = (SudokuGame *)game;
 
     for (int r = 0; r < 9; r++) {

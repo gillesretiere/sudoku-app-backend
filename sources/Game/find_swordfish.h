@@ -8,6 +8,6 @@
  * Recherche et applique la stratégie du Swordfish sur les lignes et colonnes.
  * Renvoie true si au moins un candidat a été éliminé.
  */
-bool find_swordfish(const SudokuGame *game);
+bool find_swordfish(SudokuGame *game);
 
 #endif /* FIND_SWORDFISH_H */

@@ -8,6 +8,6 @@
  * Recherche une Paire Cachée (Hidden Pair) dans la grille.
  * Renvoie true si un indice a été trouvé et affiché.
  */
-bool find_hidden_pair(const SudokuGame *game);
+bool find_hidden_pair(SudokuGame *game);
 
 #endif

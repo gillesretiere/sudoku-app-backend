@@ -8,6 +8,6 @@
  * Recherche un Triplet Nu (Naked Triple).
  * Renvoie true si un indice a été trouvé et affiché.
  */
-bool find_naked_triple(const SudokuGame *game);
+bool find_naked_triple(SudokuGame *game);
 
 #endif

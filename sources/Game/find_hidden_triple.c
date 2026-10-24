@@ -12,7 +12,7 @@ static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     return false;
 }
 
-bool find_hidden_triple(const SudokuGame *game) {
+bool find_hidden_triple(SudokuGame *game) {
     bool changed = false;
 
     for (int unit_type = 0; unit_type < 3; unit_type++) {

@@ -25,7 +25,11 @@
 #define COLOR_MAGENTA "\033[1;38;2;190;70;255m" // Violet/Magenta
 #define COLOR_GREEN   "\033[1;32m"  // Vert (Pince Z)
 
-typedef bool (*StrategyFn)(const SudokuGame *);
+/* Avant */
+// typedef bool (*StrategyFn)(const SudokuGame *);
+
+/* Après */
+typedef bool (*StrategyFn)(SudokuGame *);
 
 typedef struct {
     const char *level_name;
@@ -264,21 +268,22 @@ bool check_victory(const SudokuGame *game) {
 
 // Recherche la première stratégie applicable et génère l'indice
 void provide_hint(const SudokuGame *game) {
-    clear_highlights((SudokuGame *)game);
+    SudokuGame *mutable_game = (SudokuGame *)game;
+    clear_highlights(mutable_game);
     printf("\n--- RECHERCHE D'UN INDICE ---\n");
 
     for (int l = 0; l < N_LEVELS; l++) {
         StrategyLevel *lvl = &levels[l];
 
         for (int i = 0; i < lvl->count; i++) {
-            if (lvl->strategies[i](game)) {
+            if (lvl->strategies[i](mutable_game)) {
                 printf("[Difficulté : %s | Stratégie : %s]\n", 
                        lvl->level_name, lvl->strategy_names[i]);
                 printf("-------------------------------\n\n");
 
-                if (game->hint_description[0] == '\0') {
-                    snprintf(((SudokuGame *)game)->hint_description, 
-                             sizeof(game->hint_description),
+                if (mutable_game->hint_description[0] == '\0') {
+                    snprintf(mutable_game->hint_description, 
+                             sizeof(mutable_game->hint_description),
                              "[%s]\n%s", 
                              lvl->level_name, lvl->strategy_names[i]);
                 }
@@ -287,8 +292,8 @@ void provide_hint(const SudokuGame *game) {
         }
     }
 
-    snprintf(((SudokuGame *)game)->hint_description, 
-             sizeof(game->hint_description),
+    snprintf(mutable_game->hint_description, 
+             sizeof(mutable_game->hint_description),
              "Aucun indice trouvé avec les stratégies actuelles.");
 
     printf("Aucun indice trouvé avec les stratégies actuelles.\n");

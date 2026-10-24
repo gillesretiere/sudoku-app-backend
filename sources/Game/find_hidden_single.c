@@ -3,7 +3,7 @@
 #include "find_hidden_single.h"
 #include "candidates.h"
 
-static bool is_valid(const SudokuGame *game, int r, int c, int val) {
+static bool is_valid(SudokuGame *game, int r, int c, int val) {
     for (int i = 0; i < 9; i++) {
         if (game->player_grid[r][i] == val || game->player_grid[i][c] == val) {
             return false;
@@ -29,7 +29,7 @@ static void print_theory(void) {
     printf("   alors ce chiffre doit obligatoirement être placé dans cette case.\n\n");
 }
 
-bool find_hidden_single(const SudokuGame *game) {
+bool find_hidden_single(SudokuGame *game) {
     SudokuGame *mutable_game = (SudokuGame *)game;
 
     // 1. Recherche par Lignes

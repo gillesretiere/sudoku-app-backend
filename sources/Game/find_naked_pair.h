@@ -8,6 +8,6 @@
  * Recherche une Paire Nue (Naked Pair) dans la grille.
  * Renvoie true si un indice a été trouvé et affiché.
  */
-bool find_naked_pair(const SudokuGame *game);
+bool find_naked_pair(SudokuGame *game);
 
 #endif

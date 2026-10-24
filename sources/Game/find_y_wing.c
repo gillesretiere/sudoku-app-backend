@@ -18,7 +18,7 @@ static bool can_see(int r1, int c1, int r2, int c2) {
 }
 
 /* Extrait les deux candidats d'une case bivalente */
-static bool get_bivalent_values(const SudokuGame *game, int r, int c, int *v1, int *v2) {
+static bool get_bivalent_values(SudokuGame *game, int r, int c, int *v1, int *v2) {
     if (game->player_grid[r][c] != 0 || count_candidates(game, r, c) != 2) {
         return false;
     }
@@ -33,16 +33,15 @@ static bool get_bivalent_values(const SudokuGame *game, int r, int c, int *v1, i
     return (found == 2);
 }
 
-bool find_y_wing(const SudokuGame *game) {
-    SudokuGame temp = *game;
-    compute_autonote(&temp);
+bool find_y_wing(SudokuGame *game) {
+    compute_autonote(game);
 
     SudokuGame *mutable_game = (SudokuGame *)game;
 
     for (int pr = 0; pr < 9; pr++) {
         for (int pc = 0; pc < 9; pc++) {
             int px, py;
-            if (!get_bivalent_values(&temp, pr, pc, &px, &py)) continue;
+            if (!get_bivalent_values(game, pr, pc, &px, &py)) continue;
 
             /* Pince 1 */
             for (int r1 = 0; r1 < 9; r1++) {
@@ -50,7 +49,7 @@ bool find_y_wing(const SudokuGame *game) {
                     if (!can_see(pr, pc, r1, c1)) continue;
 
                     int p1_v1, p1_v2;
-                    if (!get_bivalent_values(&temp, r1, c1, &p1_v1, &p1_v2)) continue;
+                    if (!get_bivalent_values(game, r1, c1, &p1_v1, &p1_v2)) continue;
 
                     int z = -1, p1_shared = -1;
                     if (p1_v1 == px || p1_v2 == px) {
@@ -68,7 +67,7 @@ bool find_y_wing(const SudokuGame *game) {
                             if ((r2 == r1 && c2 == c1) || !can_see(pr, pc, r2, c2)) continue;
 
                             int p2_v1, p2_v2;
-                            if (!get_bivalent_values(&temp, r2, c2, &p2_v1, &p2_v2)) continue;
+                            if (!get_bivalent_values(game, r2, c2, &p2_v1, &p2_v2)) continue;
 
                             int p2_shared = (p1_shared == px) ? py : px;
                             if (!((p2_v1 == z && p2_v2 == p2_shared) || (p2_v1 == p2_shared && p2_v2 == z))) {
@@ -82,8 +81,8 @@ bool find_y_wing(const SudokuGame *game) {
                                     if ((er == pr && ec == pc) || (er == r1 && ec == c1) || (er == r2 && ec == c2)) {
                                         continue;
                                     }
-                                    if (temp.player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
-                                        if (has_candidate(&temp, er, ec, z)) {
+                                    if (game->player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
+                                        if (has_candidate(game, er, ec, z)) {
                                             can_eliminate = true;
                                         }
                                     }
@@ -119,8 +118,8 @@ bool find_y_wing(const SudokuGame *game) {
                                         if ((er == pr && ec == pc) || (er == r1 && ec == c1) || (er == r2 && ec == c2)) {
                                             continue;
                                         }
-                                        if (temp.player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
-                                            if (has_candidate(&temp, er, ec, z)) {
+                                        if (game->player_grid[er][ec] == 0 && can_see(r1, c1, er, ec) && can_see(r2, c2, er, ec)) {
+                                            if (has_candidate(game, er, ec, z)) {
                                                 mutable_game->highlight_red[er][ec] |= (1 << z);
                                             }
                                         }

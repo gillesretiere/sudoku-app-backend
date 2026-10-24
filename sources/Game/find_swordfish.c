@@ -12,7 +12,7 @@ static bool remove_candidate_bit(SudokuGame *game, int r, int c, int val) {
     return false;
 }
 
-bool find_swordfish(const SudokuGame *game) {
+bool find_swordfish(SudokuGame *game) {
     bool changed = false;
 
     // 1. Recherche basée sur les lignes (Swordfish horizontal)
