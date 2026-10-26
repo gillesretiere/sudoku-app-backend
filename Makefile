@@ -4,8 +4,11 @@ CC = gcc
 # Détection automatique du système d'exploitation (Darwin = macOS, Linux = VPS)
 UNAME_S := $(shell uname -s)
 
-# Options de compilation communes
-CFLAGS = -Wall -Wextra -std=c11 -DGAME_MODE -I. -Isources -Isources/Game -Isources/Generator
+# Options de compilation communes (Inclusion de sources/core)
+CFLAGS = -Wall -Wextra -std=c11 -DGAME_MODE -I. -Isources -Isources/core -Isources/solver -Isources/generator -Isources/legacy/Game -Isources/legacy/Generator
+
+# Nouveaux fichiers sources du noyau Phase 2
+SRCS_CORE = sources/core/core_board.c
 
 # Options et bibliothèques spécifiques selon la plateforme
 ifeq ($(UNAME_S), Darwin)
