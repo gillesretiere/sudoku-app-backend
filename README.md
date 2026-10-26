@@ -148,6 +148,19 @@ flutter pub get
 # Lancer la compilation native macOS
 flutter run -d macos
 ```
+## Ajout de fichiers de compilation Flutter
+```
+cd ~/Dev/sudoku_flutter
+open macos/Runner.xcworkspace
+```
+Dans le panneau de gauche (Project Navigator), localiser le dossier Runner > Game.
+« Add Files to "Runner"... »
+Sélectionner les fichiers .c et .h à ajouter
+Relancer l'application : 
+```
+cd ~/Dev/sudoku_flutter
+flutter run -d macos
+```
 
 # Liaison Dart (FFI) : Flutter charge la bibliothèque et appelle la fonction C native au clic sur le bouton.
 ## Gestion de l'audio
