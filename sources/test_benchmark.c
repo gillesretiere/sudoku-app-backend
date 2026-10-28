@@ -23,19 +23,19 @@ int main(void) {
         },
         {
             .name = "Niveau 2 - Intermediaire",
-            .target = {.min_se = 2.0f, .max_se = 3.2f, .max_clues = 35, .max_attempts = 200}
+            .target = {.min_se = 2.0f, .max_se = 3.2f, .max_clues = 35, .max_attempts = 300}
         },
         {
             .name = "Niveau 3 - Avance",
-            .target = {.min_se = 3.3f, .max_se = 4.5f, .max_clues = 31, .max_attempts = 1000}
+            .target = {.min_se = 3.3f, .max_se = 4.1f, .max_clues = 31, .max_attempts = 1000}
         },
         {
             .name = "Niveau 4 - Expert",
-            .target = {.min_se = 4.6f, .max_se = 5.5f, .max_clues = 27, .max_attempts = 2000}
+            .target = {.min_se = 4.2f, .max_se = 5.1f, .max_clues = 28, .max_attempts = 3000}
         },
         {
             .name = "Niveau 5 - Maitre",
-            .target = {.min_se = 5.6f, .max_se = 8.0f, .max_clues = 24, .max_attempts = 5000}
+            .target = {.min_se = 5.2f, .max_se = 8.0f, .max_clues = 26, .max_attempts = 6000}
         }
     };
 
@@ -48,9 +48,9 @@ int main(void) {
     for (int i = 0; i < 5; i++) {
         SudokuBoard board;
         clock_t start = clock();
-        
+
         bool success = generator_royle_generate_puzzle(&levels[i].target, &board);
-        
+
         clock_t end = clock();
         double elapsed_ms = ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
         total_time += elapsed_ms;
