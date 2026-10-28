@@ -10,7 +10,6 @@ typedef struct {
     int r2, c2;
 } SymmetricPair;
 
-/* Mélange de Fisher-Yates pour un tableau de paires symétriques */
 static void shuffle_pairs(SymmetricPair *pairs, int count) {
     for (int i = count - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -20,7 +19,6 @@ static void shuffle_pairs(SymmetricPair *pairs, int count) {
     }
 }
 
-/* Mélange un tableau de chiffres (1 à 9) */
 static void shuffle_digits(uint8_t *array, int size) {
     for (int i = size - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -30,7 +28,6 @@ static void shuffle_digits(uint8_t *array, int size) {
     }
 }
 
-/* Remplissage récursif avec retour sur trace (Backtracking) pour créer une grille complète valide */
 static bool fill_board_random(SudokuBoard *board, int row, int col) {
     if (row == BOARD_SIZE) return true;
     if (col == BOARD_SIZE) return fill_board_random(board, row + 1, 0);
@@ -40,15 +37,15 @@ static bool fill_board_random(SudokuBoard *board, int row, int col) {
 
     for (int i = 0; i < 9; i++) {
         uint8_t val = digits[i];
-
-        /* Vérification directe de validité dans la ligne, colonne et bloc 3x3 */
         bool valid = true;
+
         for (int k = 0; k < BOARD_SIZE; k++) {
             if (board->cells[row][k].value == val || board->cells[k][col].value == val) {
                 valid = false;
                 break;
             }
         }
+
         if (valid) {
             int box_r = (row / 3) * 3;
             int box_c = (col / 3) * 3;
@@ -86,24 +83,20 @@ bool generator_royle_generate_puzzle(const GeneratorTarget *target, SudokuBoard 
     }
 
     int attempts = 0;
-    int max_attempts = (target->max_attempts > 0) ? target->max_attempts : 100;
+    int max_attempts = (target->max_attempts > 0) ? target->max_attempts : 1000;
 
     while (attempts < max_attempts) {
         attempts++;
 
-        /* 1. Générer une solution complète 9x9 */
         SudokuBoard full_board;
         generator_royle_generate_full_grid(&full_board);
         SudokuBoard work_board = full_board;
 
-        /* 2. Construire la liste des 41 paires symétriques S180 */
         SymmetricPair pairs[41];
         int pair_count = 0;
 
-        /* Case centrale (4, 4) */
         pairs[pair_count++] = (SymmetricPair){4, 4, 4, 4};
 
-        /* Paires symétriques de la matrice */
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 int sym_r = 8 - r;
@@ -114,28 +107,22 @@ bool generator_royle_generate_puzzle(const GeneratorTarget *target, SudokuBoard 
             }
         }
 
-        /* 3. Mélanger l'ordre de retrait des paires */
         shuffle_pairs(pairs, pair_count);
-
         int current_clues = 81;
 
-        /* 4. Creusement symétrique avec contrôle d'unicité DLX */
         for (int i = 0; i < pair_count; i++) {
             SymmetricPair p = pairs[i];
             uint8_t backup1 = work_board.cells[p.r1][p.c1].value;
             uint8_t backup2 = work_board.cells[p.r2][p.c2].value;
 
-            /* Retrait temporaire des chiffres */
             board_set_value(&work_board, p.r1, p.c1, 0);
             if (p.r1 != p.r2 || p.c1 != p.c2) {
                 board_set_value(&work_board, p.r2, p.c2, 0);
             }
 
-            /* Vérification d'unicité via Dancing Links */
             if (solver_dlx_has_unique_solution(&work_board, NULL)) {
                 current_clues -= (p.r1 == p.r2 && p.c1 == p.c2) ? 1 : 2;
             } else {
-                /* Si l'unicité est perdue, restaurer les cases */
                 board_set_value(&work_board, p.r1, p.c1, backup1);
                 if (p.r1 != p.r2 || p.c1 != p.c2) {
                     board_set_value(&work_board, p.r2, p.c2, backup2);
@@ -143,11 +130,9 @@ bool generator_royle_generate_puzzle(const GeneratorTarget *target, SudokuBoard 
             }
         }
 
-        /* 5. Évaluation logique formelle */
         SudokuEvaluation eval;
         solver_eval_analyze(&work_board, &eval);
 
-        /* 6. Valider la conformité de la grille */
         if (eval.is_solvable && 
             eval.max_se_rating >= target->min_se && 
             eval.max_se_rating <= target->max_se && 

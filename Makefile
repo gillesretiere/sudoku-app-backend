@@ -1,7 +1,7 @@
 # Compilateur
 CC = gcc
 
-# Options de compilation C11 avec tous les avertissements activés
+# Options de compilation C11
 CFLAGS = -Wall -Wextra -std=c11 -O2 -I. -Isources -Isources/core -Isources/solver -Isources/generator
 
 # Fichiers sources des 4 modules de la Phase 2
@@ -10,25 +10,30 @@ SRCS_PHASE2 = sources/core/core_board.c \
               sources/solver/solver_eval.c \
               sources/generator/generator_royle.c
 
-# Objets pour la Phase 2
+# Objets compilés
 OBJS_PHASE2 = $(SRCS_PHASE2:.c=.o)
 
-# Cibles d'exécution
+# Binaires cibles
 TARGET_TEST = test_phase2
+TARGET_BENCHMARK = test_benchmark
 
 # Règle par défaut
-all: $(TARGET_TEST)
+all: $(TARGET_TEST) $(TARGET_BENCHMARK)
 
-# Compilation du binaire de test
+# Compilation du binaire de test unitaire
 $(TARGET_TEST): $(OBJS_PHASE2) sources/test_phase2.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
-# Règle générique de compilation des fichiers .c en .o
+# Compilation du binaire de benchmark
+$(TARGET_BENCHMARK): $(OBJS_PHASE2) sources/test_benchmark.o
+	$(CC) $(CFLAGS) $^ -o $@ -lm
+
+# Règle générique de compilation .c -> .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Nettoyage
 clean:
-	rm -f $(OBJS_PHASE2) sources/test_phase2.o $(TARGET_TEST)
+	rm -f $(OBJS_PHASE2) sources/test_phase2.o sources/test_benchmark.o $(TARGET_TEST) $(TARGET_BENCHMARK)
 
 .PHONY: all clean
