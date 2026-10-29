@@ -1,25 +1,6 @@
-# Apress Source Code
+# Sudoku Kaï
 
-This repository accompanies [*Sudoku Programming with C*](http://www.apress.com/9781484209967) by Giulio Zambon (Apress, 2015).
-
-![Cover image](9781484209967.jpg)
-
-Download the files as a zip using the green button, or clone the repository to your machine using Git.
-
-## Releases
-
-Release v1.0 corresponds to the code in the published book, without corrections or updates.
-
-## Contributions
-
-See the file Contributing.md for more information on how you can contribute to this repository.
-
-# Adaptation
-## Version CLI (C Language)
-
-## Version Raylib
-
-## Version Flutter
+## Installation Flutter et XCode
 ```
 xcode-select --install
 sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
@@ -33,83 +14,23 @@ flutter doctor
 brew install cocoapods
 ```
 
-
-### Clonage du repo Git.
+## Clonage du repo Git.
 ```
 ssh -Y gre@vps-1263ad51.vps.ovh.net
 cd ~/projets/sudoku
 git clone https://github.com/gillesretiere/sudoku-app-backend.git
 ```
 
-#### Compilation des sources
+## Compilation des sources
 
-##### sudoku_game (Jeu)
+### VPS
 ```
-gcc -Wall -Wextra -std=c11 -DGAME_MODE game.c main.c candidates.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o sudoku_game
-```
-
-##### inspect_bank (Inspecteur de grilles)
-```
-cd ~/sources/Game
-gcc -Wall -Wextra -std=c11 -DGAME_MODE inspect_bank.c game.c candidates.c solver_eval.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o inspect_bank
-```
-
-##### build_bank (Générateur de grilles)
-```
-cd ~/sources/Game
-gcc -Wall -Wextra -std=c11 -DGAME_MODE generate_bank.c game.c candidates.c solver_eval.c bank_loader.c grid_transform.c find_naked_single.c find_hidden_single.c find_naked_pair.c find_hidden_pair.c find_pointing_pairs.c find_box_line_reduction.c find_naked_triple.c find_x_wing.c find_y_wing.c ../Generator/*.c -I. -I../Generator -o build_bank
-```
-## Notes concernant les compilations séparéés CLI et GUI
-### CLI
-Penser à ajouter ce code en début de chaque fichier .h et .c
-```
-/* En mode GUI, la macro GUI_MODE neutralise uniquement les printf de la version graphique */
-#ifdef GUI_MODE
-    #define printf(...) ((void)0)
-#endif
-```
-#### Compilation des deux versions
-```
-make clean && make
-```
-
-## Consignes de développement pour passer de Linux à Mac
-Sur VPS Debian : 
-```
-# 1. Vérifie l'état de tes fichiers
+gcc -Wall -Wextra -std=c11 -I. -Isources/core -Isources/solver -Isources/generator -c sources/generator/generator_royle.c -o sources/generator/generator_royle.o
 git status
-
-# 2. Ajoute les éventuelles modifications non enregistrées
 git add .
-
-# 3. Valide les modifications
 git commit -m "Mise a jour de sudoku_gui.c et du Makefile"
-
-# 4. Envoie les commits vers GitHub (étape essentielle !)
-git push origin main
-
+git push origin phase2-refactoring
 ```
-Sur Mac : 
-```
-cd ~/Documents/gre-24/dev/sudoku/sudoku-app-backend
-
-# (optionnel) mise de côté (dans une *boîte de réserve*) des modifications locales sur le Mac, non publiables mais dont la présence empêche de récupérer les derniers changements (git pull).
-git stash -u
-
-# Récupérer les derniers changements depuis GitHub
-git pull origin main
-
-# Recompiler 
-make clean && make
-```
-# Workflow de compilation
-## Sur VPS
-```
-make clean && make all
-./sources/Game/sudoku_game 
-
-```
-
 
 ## Sur Mac (workflow complet de construction): 
 ```
@@ -119,46 +40,26 @@ make clean && make all
 cd ~/Documents/gre-24/dev/sudoku/sudoku-app-backend
 
 # Récupérer les derniers changements depuis GitHub
-git pull origin main
+git pull origin phase2-refactoring
 
 # Recompiler 
 make clean && make
 
-# Tester la version autonome
-./sudoku_gui
-
-# ----------------------------------------------------
-# ÉTAPE 2 : Synchroniser les sources C vers le projet Flutter
-# ----------------------------------------------------
-# Copier les fichiers C mis à jour vers le dossier Runner/Game de Flutter
-cp -R sources/Game/* ~/Dev/sudoku_flutter/macos/Runner/Game/
+# en cas de push, s'assurer que on utilise ssh et non https
+git remote -v
+git remote set-url origin git@github.com:gillesretiere/sudoku-app-backend.git
+ssh -T git@github.com
+git push origin HEAD:phase2-refactoring
 
 # ----------------------------------------------------
 # ÉTAPE 3 : Compiler et exécuter l'application Flutter
 # ----------------------------------------------------
 cd ~/Dev/sudoku_flutter
+# copie de la lib libsudoku.dylib générée en amont (make)
+cp /Users/retieregilles/Documents/gre-24/dev/sudoku/sudoku-app-backend/libsudoku.dylib ./
+cp /Users/retieregilles/Documents/gre-24/dev/sudoku/sudoku-app-backend/libsudoku.dylib ./macos
+cp /Users/retieregilles/Documents/gre-24/dev/sudoku/sudoku-app-backend/libsudoku.dylib  ~/Library/Containers/com.example.sudokuFlutter/Data/macos/
 
-# Nettoyer les métadonnées cachées de macOS
-xattr -cr .
-
-# Purger l'ancien build pour forcer la recompilation des fichiers C
-flutter clean
-flutter pub get
-
-# Lancer la compilation native macOS
-flutter run -d macos
-```
-## Ajout de fichiers de compilation Flutter
-```
-cd ~/Dev/sudoku_flutter
-open macos/Runner.xcworkspace
-```
-Dans le panneau de gauche (Project Navigator), localiser le dossier Runner > Game.
-« Add Files to "Runner"... »
-Sélectionner les fichiers .c et .h à ajouter
-Relancer l'application : 
-```
-cd ~/Dev/sudoku_flutter
 flutter run -d macos
 ```
 
