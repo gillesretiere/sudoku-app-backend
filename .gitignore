@@ -18,13 +18,18 @@ Thumbs.db
 build/
 bin/
 
-sources/legacy/Generator/out.txt
-sources/legacy/Generator/*.html
+# --- Exécutables du moteur ---
+test_phase2
+test_benchmark
+
+# --- Exécutables et sorties volumineuses du dossier Legacy ---
+sources/legacy/**/out.txt
+sources/legacy/**/*.html
+sources/legacy/**/puzzles_bank.txt
 sources/legacy/Generator/sudoku_app_generator
-sources/legacy/Solver/sudoku_app_solver
 sources/legacy/Generator/sudoku_gen
+sources/legacy/Solver/sudoku_app_solver
 sources/legacy/Game/sudoku_game
-sources/legacy/Game/puzzles_bank.txt
 sources/legacy/Game/build_bank
 sources/legacy/Game/inspect_bank
 
