@@ -1,39 +1,33 @@
-# Compilateur
+# Compilateur et options
 CC = gcc
+CFLAGS = -Wall -Wextra -std=c11 -O3 -fPIC -I. -Isources -Isources/core -Isources/solver -Isources/generator
 
-# Options de compilation C11
-CFLAGS = -Wall -Wextra -std=c11 -O2 -I. -Isources -Isources/core -Isources/solver -Isources/generator
+# Fichiers sources du moteur C11
+SRCS = sources/core/core_board.c \
+       sources/solver/solver_dlx.c \
+       sources/solver/solver_eval.c \
+       sources/generator/generator_royle.c \
+       sources/sudoku_api.c
 
-# Fichiers sources des 4 modules de la Phase 2
-SRCS_PHASE2 = sources/core/core_board.c \
-              sources/solver/solver_dlx.c \
-              sources/solver/solver_eval.c \
-              sources/generator/generator_royle.c
+OBJS = $(SRCS:.c=.o)
 
-# Objets compilés
-OBJS_PHASE2 = $(SRCS_PHASE2:.c=.o)
+# Fichier dynamique cible pour macOS
+DYLIB = libsudoku.dylib
 
-# Binaires cibles
-TARGET_TEST = test_phase2
-TARGET_BENCHMARK = test_benchmark
+all: $(DYLIB) test_benchmark
 
-# Règle par défaut
-all: $(TARGET_TEST) $(TARGET_BENCHMARK)
+# Règle pour générer la bibliothèque dynamique macOS (.dylib)
+$(DYLIB): $(OBJS)
+	$(CC) -dynamiclib -o $@ $^ -lm
 
-# Compilation du binaire de test unitaire
-$(TARGET_TEST): $(OBJS_PHASE2) sources/test_phase2.o
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+# Règle pour l'exécutable de benchmark
+test_benchmark: sources/test_benchmark.c $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-# Compilation du binaire de benchmark
-$(TARGET_BENCHMARK): $(OBJS_PHASE2) sources/test_benchmark.o
-	$(CC) $(CFLAGS) $^ -o $@ -lm
-
-# Règle générique de compilation .c -> .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage
 clean:
-	rm -f $(OBJS_PHASE2) sources/test_phase2.o sources/test_benchmark.o $(TARGET_TEST) $(TARGET_BENCHMARK)
+	rm -f $(OBJS) $(DYLIB) test_benchmark
 
 .PHONY: all clean
