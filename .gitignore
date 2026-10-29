@@ -18,15 +18,15 @@ Thumbs.db
 build/
 bin/
 
-sources/Generator/out.txt
-sources/Generator/*.html
-sources/Generator/sudoku_app_generator
-sources/Solver/sudoku_app_solver
-sources/Generator/sudoku_gen
-sources/Game/sudoku_game
-sources/Game/puzzles_bank.txt
-sources/Game/build_bank
-sources/Game/inspect_bank
+sources/legacy/Generator/out.txt
+sources/legacy/Generator/*.html
+sources/legacy/Generator/sudoku_app_generator
+sources/legacy/Solver/sudoku_app_solver
+sources/legacy/Generator/sudoku_gen
+sources/legacy/Game/sudoku_game
+sources/legacy/Game/puzzles_bank.txt
+sources/legacy/Game/build_bank
+sources/legacy/Game/inspect_bank
 
 # Exécutable final
 sudoku_gui
