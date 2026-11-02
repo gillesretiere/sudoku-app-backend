@@ -92,9 +92,9 @@ bool generator_royle_generate_puzzle(const GeneratorTarget *target, SudokuBoard 
         generator_royle_generate_full_grid(&full_board);
         SudokuBoard work_board = full_board;
 
+        // PASSE 1 : Creusage Symétrique S_180 (Paires)
         SymmetricPair pairs[41];
         int pair_count = 0;
-
         pairs[pair_count++] = (SymmetricPair){4, 4, 4, 4};
 
         for (int r = 0; r < 9; r++) {
@@ -130,6 +130,40 @@ bool generator_royle_generate_puzzle(const GeneratorTarget *target, SudokuBoard 
             }
         }
 
+        // PASSE 2 : Creusage Asymétrique (Pour pousser le retrait d'indices sous 26)
+        if (target->max_clues < 28) {
+            int single_cells[81];
+            for (int i = 0; i < 81; i++) single_cells[i] = i;
+
+            // Mélanger l'ordre des cases
+            for (int i = 80; i > 0; i--) {
+                int j = rand() % (i + 1);
+                int tmp = single_cells[i];
+                single_cells[i] = single_cells[j];
+                single_cells[j] = tmp;
+            }
+
+            for (int i = 0; i < 81; i++) {
+                if (current_clues <= target->max_clues) break;
+
+                int idx = single_cells[i];
+                int r = idx / 9;
+                int c = idx % 9;
+
+                if (work_board.cells[r][c].value != 0) {
+                    uint8_t backup = work_board.cells[r][c].value;
+                    board_set_value(&work_board, r, c, 0);
+
+                    if (solver_dlx_has_unique_solution(&work_board, NULL)) {
+                        current_clues--;
+                    } else {
+                        board_set_value(&work_board, r, c, backup);
+                    }
+                }
+            }
+        }
+
+        // Évaluation de la difficulté atteinte
         SudokuEvaluation eval;
         solver_eval_analyze(&work_board, &eval);
 
