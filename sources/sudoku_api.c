@@ -10,27 +10,41 @@ bool sudoku_api_generate_level(int level, SudokuPuzzleDTO *out_puzzle) {
 
     memset(out_puzzle, 0, sizeof(SudokuPuzzleDTO));
 
+    /* 
+     * Recalibrage des objectifs de génération par niveau (SE Rating & Nombre d'indices max)
+     * Pour les niveaux 4 et 5, le nombre d'indices est fortement réduit afin d'éliminer
+     * les résolutions trop simples par paires orientées et forcer des motifs complexes (X-Wing, etc.).
+     */
     GeneratorTarget targets[5] = {
-        {.min_se = 1.0f, .max_se = 1.5f, .max_clues = 40, .max_attempts = 200},
-        {.min_se = 2.0f, .max_se = 3.2f, .max_clues = 35, .max_attempts = 300},
-        {.min_se = 3.3f, .max_se = 4.1f, .max_clues = 31, .max_attempts = 1000},
-        {.min_se = 4.2f, .max_se = 5.1f, .max_clues = 28, .max_attempts = 3000},
-        {.min_se = 5.2f, .max_se = 8.0f, .max_clues = 26, .max_attempts = 6000}
+        /* Niveau 1 : Débutant (Singles Nus) */
+        {.min_se = 1.0f, .max_se = 1.5f, .max_clues = 38, .max_attempts = 300},
+        
+        /* Niveau 2 : Intermédiaire (Singles Cachés) */
+        {.min_se = 1.6f, .max_se = 2.2f, .max_clues = 32, .max_attempts = 500},
+        
+        /* Niveau 3 : Avancé (Paires orientées / Paires nues) */
+        {.min_se = 2.3f, .max_se = 3.5f, .max_clues = 27, .max_attempts = 1500},
+        
+        /* Niveau 4 : Expert (Force l'apparition de X-Wing / Triplets) */
+        {.min_se = 3.6f, .max_se = 4.8f, .max_clues = 23, .max_attempts = 4000},
+        
+        /* Niveau 5 : Maître (Grilles minimales à haute technicité) */
+        {.min_se = 4.9f, .max_se = 8.0f, .max_clues = 20, .max_attempts = 8000}
     };
 
     SudokuBoard board;
     bool ok = generator_royle_generate_puzzle(&targets[level - 1], &board);
     if (!ok) return false;
 
-    /* Extraire la solution unique via DLX */
+    /* Extraire la solution unique via l'algorithme DLX */
     uint8_t sol[BOARD_SIZE][BOARD_SIZE];
     solver_dlx_has_unique_solution(&board, sol);
 
-    /* Évaluer le score SE final */
+    /* Évaluer le score SE (Sudoku Explainer) final de la grille */
     SudokuEvaluation eval;
     solver_eval_analyze(&board, &eval);
 
-    /* Remplir le DTO de retour */
+    /* Remplir le DTO d'exportation pour le frontend */
     int clues = 0;
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
